@@ -1,0 +1,55 @@
+@import "tailwindcss";
+/* Fuente Nunito local - sin necesidad de internet */
+@import '@fontsource/nunito/400.css';
+@import '@fontsource/nunito/600.css';
+@import '@fontsource/nunito/700.css';
+
+@theme {
+  --color-primary: #4a90a4; /* celeste principal */
+  --color-green-1: #538d6a; /* verde apagado */
+  --color-green-2: #86b499; /* verde apagado claro */
+}
+
+body {
+  @apply bg-white text-black;
+  font-family: 'Nunito', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Utilidades simples con la paleta */
+.bg-primary { background-color: var(--color-primary); }
+.text-primary { color: var(--color-primary); }
+.bg-green-1 { background-color: var(--color-green-1); }
+.bg-green-2 { background-color: var(--color-green-2); }
+.border-black { border-color: #000000; }
+
+/* Inputs legibles sobre fondo claro */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+  color: #111 !important;
+  caret-color: #111;
+}
+
+/* Arreglo de autofill (Chrome/WebKit) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-text-fill-color: #111 !important;
+  box-shadow: 0 0 0px 1000px #ffffff inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Variante opcional de input bone */
+.input-bone {
+  background-color: #f7f3e9;
+  color: #111;
+}

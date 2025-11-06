@@ -9,6 +9,13 @@ dist
 # Node dependencies
 node_modules
 
+AUTENTICACION_TEMPORAL.md
+CITAS_SISTEMA.md
+DOCUMENTACION_LOGICA.md
+GUIA_PRESENTACION.md
+
+public/images/
+
 # Logs
 logs
 *.log
