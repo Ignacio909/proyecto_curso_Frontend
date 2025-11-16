@@ -6,7 +6,7 @@ export const useAuth = () => {
   // Cuando implementen el login, esto vendrá de la sesión real
   const currentUser = ref({
     id: '123e4567-e89b-12d3-a456-426614174000',
-    rol: 'admin', // Cambiar a 'admin', 'paciente', o 'especialista' para probar
+    rol: 'paciente', // Cambiar a 'admin', 'paciente', o 'especialista' para probar
     usuario: 'juan_perez',
     correo: 'juan@example.com',
     imagen: null,

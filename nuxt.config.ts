@@ -8,7 +8,7 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/main.css'
   ],
-  
+
   vite: {
     plugins: [
       tailwindcss(),
@@ -20,5 +20,6 @@ export default defineNuxtConfig({
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001',
     }
   },
-  
+
+  modules: ['nuxt-auth-utils'],
 })

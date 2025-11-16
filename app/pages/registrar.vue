@@ -33,7 +33,7 @@ const handleRegistro = async () => {
       retry: 0,
     })
     // pequeña pausa para evitar "<no response>" en devtools al navegar
-    setTimeout(() => navigateTo('/index', { replace: true }), 0)
+    setTimeout(() => navigateTo('/', { replace: true }), 0)
   } catch (err) {
     const msg = (err && err.data && (err.data.message || err.data.error)) || err?.message
     errorMsg.value = msg || 'No se pudo registrar. Verifica los datos e inténtalo nuevamente.'
