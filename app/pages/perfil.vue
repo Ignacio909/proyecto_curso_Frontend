@@ -1,17 +1,23 @@
 <script setup>
+definePageMeta({ layout: 'default',
+                 auth: true }
+)
 // TODO: Cuando implementen el login, este composable traerá los datos reales del usuario autenticado
-const { currentUser, isAdmin, isPaciente, isEspecialista } = useAuth()
+const { data } = useAuth()
+const isAdmin = computed(() => data.value?.rol === 'admin')
+const isPaciente = computed(() => data.value?.rol === 'paciente')
+const isEspecialista = computed(() => data.value?.rol === 'especialista')
 
 // Formulario reactivo
 const formData = ref({
-  usuario: currentUser.value.usuario || '',
-  correo: currentUser.value.correo || '',
+  usuario: data.value?.usuario || '',
+  correo: data.value?.correo || '',
   contrasenaAnterior: '',
   contrasenaNueva: '',
   // Campos específicos por rol
-  telefono: currentUser.value.telefono || '',
-  carnetIdentidad: currentUser.value.carnetIdentidad || '',
-  especialidad: currentUser.value.especialidad || ''
+  telefono: data.value?.telefono || '',
+  carnetIdentidad: data.value?.carnetIdentidad || '',
+  especialidad: data.value?.especialidad || ''
 })
 
 const notification = ref({ show: false, message: '', type: '' })
@@ -75,10 +81,10 @@ const handleSave = async () => {
 
     <div class="flex flex-col items-center gap-3 py-6">
       <div 
-        v-if="currentUser.imagen"
+        v-if="data?.imagen"
         class="h-28 w-28 rounded-full bg-primary/20 ring-4 ring-primary/30 overflow-hidden"
       >
-        <img :src="currentUser.imagen" alt="Perfil" class="h-full w-full object-cover" />
+        <img :src="data?.imagen" alt="Perfil" class="h-full w-full object-cover" />
       </div>
       <div v-else class="h-28 w-28 rounded-full bg-primary/20 ring-4 ring-primary/30" />
       <Button 

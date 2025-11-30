@@ -1,17 +1,48 @@
 <script setup>
 definePageMeta({
-  layout: 'minimal'
+  layout: 'minimal',
+  auth: { unauthenticatedOnly: true, navigateAuthenticatedTo: '/home' }
 })
 
+const { signIn, data, refresh } = useAuth()
+
 const formData = ref({
-  usuario: '',
+  correo: '',
   contrasena: ''
 })
 
-const handleLogin = () => {
-  // TODO: Implementar lógica de autenticación cuando tengan el sistema de login
-  // Por ahora solo redirige al home
-  navigateTo('/home')
+const isSubmitting = ref(false)
+const authError = ref('')
+
+const handleLogin = async () => {
+  if (isSubmitting.value) return
+  isSubmitting.value = true
+  authError.value = ''
+  try {
+    const result = await signIn(
+      { correo: formData.value.correo, contrasena: formData.value.contrasena },
+      { redirect: false }
+    )
+
+    if (result?.error) {
+      authError.value = result.error === 'CredentialsSignin'
+        ? 'Correo o contraseña incorrectos'
+        : result.error
+      return
+    }
+
+    await refresh()
+    const role = data.value?.rol
+    if (role === 'admin') {
+      await navigateTo('/admin')
+    } else {
+      await navigateTo('/home')
+    }
+  } catch (e) {
+    authError.value = 'No fue posible iniciar sesión. Intenta nuevamente.'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -27,13 +58,13 @@ const handleLogin = () => {
 
         <!-- Formulario -->
         <form @submit.prevent="handleLogin" class="p-8 space-y-6">
-          <!-- Nombre Usuario -->
+          <!-- Correo -->
           <div>
             <label class="block text-center text-lg font-semibold mb-3 text-gray-700">
-              Nombre Usuario:
+              Correo:
             </label>
             <input
-              v-model="formData.usuario"
+              v-model="formData.correo"
               type="text"
               
               class="w-full px-4 py-3 border-2 border-black rounded-md text-lg focus:outline-none focus:border-primary transition"

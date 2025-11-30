@@ -1,6 +1,10 @@
 <script setup>
 definePageMeta({
-  layout: 'minimal'
+  layout: 'minimal',
+  auth: {
+    unauthenticatedOnly: true,
+    navigateAuthenticatedTo: '/home'
+  }
 })
 
 const form = reactive({

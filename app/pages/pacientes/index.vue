@@ -1,14 +1,19 @@
 <script setup>
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  auth: true
 })
 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
+const { token } = useAuth()
 
 // Usar useFetch para cargar datos (GET) - SSR
 const { data: patients, pending, error, refresh } = await useFetch(`${apiBase}/pacientes`, {
-  key: 'patients-list'
+  key: 'patients-list',
+  headers: {
+    Authorization: `Bearer ${token.value}`
+  }
 })
 
 // Estados para modales
@@ -114,6 +119,7 @@ const saveEdit = async (formData) => {
 
     await $fetch(`${apiBase}/pacientes/${selectedPatient.value.id}`, {
       method: 'PUT',
+      headers: { Authorization: `Bearer ${token.value}` },
       body: payload
     })
     
@@ -129,7 +135,8 @@ const saveEdit = async (formData) => {
 const confirmDelete = async () => {
   try {
     await $fetch(`${apiBase}/pacientes/${selectedPatient.value.id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token.value}` }
     })
     
     showDeleteModal.value = false
@@ -145,6 +152,7 @@ const saveAdd = async (formData) => {
   try {
     await $fetch(`${apiBase}/pacientes`, {
       method: 'POST',
+      headers: { Authorization: `Bearer ${token.value}` },
       body: {
         usuario: formData.usuario,
         correo: formData.correo,

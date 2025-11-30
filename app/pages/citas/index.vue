@@ -1,4 +1,7 @@
 <script setup>
+definePageMeta({
+  auth: true
+})
 // TODO: Cuando tengan autenticación, obtener el pacienteId del usuario autenticado
 const { currentUser } = useAuth()
 

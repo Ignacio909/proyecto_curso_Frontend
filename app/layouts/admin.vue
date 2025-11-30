@@ -1,3 +1,8 @@
+<script setup>
+const { signOut } = useAuth()
+const onSignOut = async () => { try { await signOut(); navigateTo('/') } catch (e) {} }
+</script>
+
 <template>
   <div class="min-h-screen bg-white text-black flex flex-col">
     <header class="bg-primary text-white">
@@ -26,7 +31,7 @@
           <Button 
             label="Cerrar Sesión" 
             variant="green-1"
-            to="/"
+            :onClick="onSignOut"
             size="sm"
           />
         </div>

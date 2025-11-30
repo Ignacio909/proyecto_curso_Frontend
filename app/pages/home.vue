@@ -1,3 +1,9 @@
+<script setup>
+definePageMeta({
+  auth: true
+})
+</script>
+
 <template>
   <section class="flex flex-col items-center gap-8">
     <div class="flex flex-col items-center gap-3 mt-6">

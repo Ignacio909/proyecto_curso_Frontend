@@ -1,6 +1,7 @@
 <script setup>
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  auth: true
 })
 </script>
 

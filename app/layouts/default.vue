@@ -1,3 +1,9 @@
+<script setup>
+const { data, status, signOut } = useAuth()
+const role = computed(() => data.value?.rol)
+const onSignOut = async () => { try { await signOut(); navigateTo('/') } catch (e) {} }
+</script>
+
 <template>
   <div class="min-h-screen bg-white text-black flex flex-col">
     <header class="bg-primary text-white">
@@ -15,17 +21,32 @@
         </div>
 
         <!-- Patient menu centrado -->
-        <ul class="flex items-center gap-8 text-lg flex-1 justify-center">
+        <ul v-if="role === 'paciente'" class="flex items-center gap-8 text-lg flex-1 justify-center">
           <li><NuxtLink to="/perfil" class="hover:underline">Mi Perfil</NuxtLink></li>
           <li><NuxtLink to="/citas/mis-citas" class="hover:underline">Mis Citas</NuxtLink></li>
           <li><NuxtLink to="/citas" class="hover:underline">Agendar Cita</NuxtLink></li>
           <li><NuxtLink to="/sobre-nosotros" class="hover:underline">Sobre Nosotros</NuxtLink></li>
         </ul>
+        <ul v-else-if="role === 'especialista'" class="flex items-center gap-8 text-lg flex-1 justify-center">
+          <li><NuxtLink to="/perfil" class="hover:underline">Mi Perfil</NuxtLink></li>
+          <li><NuxtLink to="/pacientes" class="hover:underline">Pacientes</NuxtLink></li>
+          <li><NuxtLink to="/citas/mis-citas" class="hover:underline">Mis Citas</NuxtLink></li>
+        </ul>
+        <ul v-else-if="role === 'admin'" class="flex items-center gap-8 text-lg flex-1 justify-center">
+          <li><NuxtLink to="/admin" class="hover:underline">Administración</NuxtLink></li>
+        </ul>
+        <div v-else class="flex-1" />
 
         <!-- Botón a la derecha -->
         <div class="flex-shrink-0">
-          <Button 
+          <Button v-if="status === 'authenticated'"
             label="Cerrar Sesión" 
+            variant="green-1"
+            :onClick="onSignOut"
+            size="sm"
+          />
+          <Button v-else
+            label="Iniciar Sesión" 
             variant="green-1"
             to="/"
             size="sm"

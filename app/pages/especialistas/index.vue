@@ -1,14 +1,19 @@
 <script setup>
 definePageMeta({
-  layout: 'admin'
+  layout: 'default',
+  auth: true
 })
 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
+const { token } = useAuth()
 
 // Usar useFetch para cargar datos (GET) - SSR
 const { data: specialists, pending, error, refresh } = await useFetch(`${apiBase}/especialistas`, {
-  key: 'specialists-list'
+  key: 'specialists-list',
+  headers: {
+    Authorization: `Bearer ${token.value}`
+  }
 })
 
 // Estados para modales
@@ -106,6 +111,7 @@ const saveEdit = async (formData) => {
 
     await $fetch(`${apiBase}/especialistas/${selectedSpecialist.value.id}`, {
       method: 'PUT',
+      headers: { Authorization: `Bearer ${token.value}` },
       body: payload
     })
     
@@ -121,7 +127,8 @@ const saveEdit = async (formData) => {
 const confirmDelete = async () => {
   try {
     await $fetch(`${apiBase}/especialistas/${selectedSpecialist.value.id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token.value}` }
     })
     
     showDeleteModal.value = false
@@ -137,6 +144,7 @@ const saveAdd = async (formData) => {
   try {
     await $fetch(`${apiBase}/especialistas`, {
       method: 'POST',
+      headers: { Authorization: `Bearer ${token.value}` },
       body: {
         usuario: formData.usuario,
         correo: formData.correo,
