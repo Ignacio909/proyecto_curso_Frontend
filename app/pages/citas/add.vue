@@ -18,27 +18,24 @@ const formData = ref({
   hora: ''
 })
 
-const notification = ref({ show: false, message: '', type: '' })
-const availableHours = ref([])
-const loadingHours = ref(false)
+// ... imports
+const { addToast } = useToast()
 
-// Horarios disponibles
-const allHours = [
-  { value: '08:00:00', label: '8:00 AM - 9:00 AM' },
-  { value: '09:00:00', label: '9:00 AM - 10:00 AM' },
-  { value: '10:00:00', label: '10:00 AM - 11:00 AM' },
-  { value: '13:00:00', label: '1:00 PM - 2:00 PM' },
-  { value: '14:00:00', label: '2:00 PM - 3:00 PM' },
-  { value: '15:00:00', label: '3:00 PM - 4:00 PM' },
-  { value: '16:00:00', label: '4:00 PM - 5:00 PM' }
-]
+// ... existing code ...
 
-const showNotification = (message, type = 'success') => {
-  notification.value = { show: true, message, type }
-  setTimeout(() => {
-    notification.value.show = false
-  }, 3000)
-}
+// Remove notification ref and showNotification function
+// const notification = ref({ show: false, message: '', type: '' })
+// const showNotification = ...
+
+// ...
+
+// In handleSubmit:
+// showNotification('...', 'error') -> addToast('...', 'error')
+// showNotification('Cita agendada exitosamente') -> addToast('Cita agendada exitosamente', 'success')
+
+// In template:
+// Remove the notification div
+
 
 // Calcular rango de fechas (2 meses desde hoy, solo lunes a viernes)
 const minDate = computed(() => {
@@ -104,12 +101,12 @@ const handleSubmit = async () => {
   try {
     // Validaciones
     if (!formData.value.especialistaId || !formData.value.fecha || !formData.value.hora) {
-      showNotification('Por favor completa todos los campos requeridos', 'error')
+      addToast('Por favor completa todos los campos requeridos', 'error')
       return
     }
     
     if (!validateWeekday(formData.value.fecha)) {
-      showNotification('Solo puedes agendar citas de lunes a viernes', 'error')
+      addToast('Solo puedes agendar citas de lunes a viernes', 'error')
       return
     }
     
@@ -128,7 +125,7 @@ const handleSubmit = async () => {
       }
     })
     
-    showNotification('Cita agendada exitosamente')
+    addToast('Cita agendada exitosamente')
     
     // Limpiar formulario
     formData.value = {
@@ -145,7 +142,7 @@ const handleSubmit = async () => {
     
   } catch (err) {
     console.error('Error al agendar cita:', err)
-    showNotification('Error al agendar la cita', 'error')
+    addToast('Error al agendar la cita', 'error')
   }
 }
 </script>
@@ -167,16 +164,7 @@ const handleSubmit = async () => {
       <h1 class="text-3xl font-bold">Agendar Cita</h1>
     </div>
 
-    <!-- Notificación -->
-    <div 
-      v-if="notification.show" 
-      :class="[
-        'mb-4 rounded-md p-4 text-white',
-        notification.type === 'error' ? 'bg-red-600' : 'bg-green-600'
-      ]"
-    >
-      {{ notification.message }}
-    </div>
+
 
     <!-- Formulario -->
     <div class="bg-white rounded-b-lg border-2 border-primary p-8 shadow-lg">

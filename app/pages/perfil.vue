@@ -20,14 +20,10 @@ const formData = ref({
   especialidad: data.value?.especialidad || ''
 })
 
-const notification = ref({ show: false, message: '', type: '' })
 
-const showNotification = (message, type = 'success') => {
-  notification.value = { show: true, message, type }
-  setTimeout(() => {
-    notification.value.show = false
-  }, 3000)
-}
+
+
+const { addToast } = useToast()
 
 // Determinar qué ruta de retorno según el rol
 const backRoute = computed(() => {
@@ -40,10 +36,10 @@ const handleSave = async () => {
     // TODO: Cuando tengan autenticación, aquí irá la llamada al API
     // Por ahora solo muestra un mensaje
     console.log('Datos a guardar:', formData.value)
-    showNotification('Perfil actualizado exitosamente')
+    addToast('Perfil actualizado exitosamente')
   } catch (err) {
     console.error('Error al actualizar perfil:', err)
-    showNotification('Error al actualizar perfil', 'error')
+    addToast('Error al actualizar perfil', 'error')
   }
 }
 </script>
@@ -68,16 +64,7 @@ const handleSave = async () => {
       <span v-else-if="isEspecialista" class="text-2xl">(Especialista)</span>
     </h1>
 
-    <!-- Notificación -->
-    <div 
-      v-if="notification.show" 
-      :class="[
-        'mb-4 rounded-md p-4 text-white',
-        notification.type === 'error' ? 'bg-red-600' : 'bg-green-600'
-      ]"
-    >
-      {{ notification.message }}
-    </div>
+
 
     <div class="flex flex-col items-center gap-3 py-6">
       <div 

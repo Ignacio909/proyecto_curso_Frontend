@@ -5,6 +5,7 @@ definePageMeta({
 })
 
 const { signIn, data, refresh } = useAuth()
+const { addToast } = useToast()
 
 const formData = ref({
   correo: '',
@@ -32,6 +33,8 @@ const handleLogin = async () => {
     }
 
     await refresh()
+    addToast('Inicio de sesión exitoso', 'success')
+    
     const role = data.value?.rol
     if (role === 'admin') {
       await navigateTo('/admin')
@@ -54,6 +57,12 @@ const handleLogin = async () => {
         <!-- Header -->
         <div class="bg-primary text-white py-6 px-8 text-center">
           <h1 class="text-3xl font-bold">Autenticarse</h1>
+        </div>
+
+        <!-- Mensaje de Error -->
+        <div v-if="authError" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-8 mt-6" role="alert">
+          <strong class="font-bold">Error: </strong>
+          <span class="block sm:inline">{{ authError }}</span>
         </div>
 
         <!-- Formulario -->

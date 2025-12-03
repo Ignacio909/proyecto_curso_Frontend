@@ -11,29 +11,28 @@ const { currentUser } = useAuth()
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 
-// Cargar todas las citas
-const { data: allCitas, pending, error, refresh } = await useFetch(`${apiBase}/citas`)
+// Cargar citas del paciente
+// TODO: Usar el ID real del paciente cuando esté disponible en currentUser
+const pacienteId = currentUser.value?.id 
+const { data: allCitas, pending, error, refresh } = await useFetch(
+  pacienteId ? `${apiBase}/citas/paciente/${pacienteId}` : null,
+  {
+    immediate: !!pacienteId,
+    watch: [currentUser]
+  }
+)
+
+
 
 // Filtro activo
 const activeFilter = ref('recientes')
 
-// Notificación
-const notification = ref({ show: false, message: '', type: '' })
-
-const showNotification = (message, type = 'success') => {
-  notification.value = { show: true, message, type }
-  setTimeout(() => {
-    notification.value.show = false
-  }, 3000)
-}
+const { addToast } = useToast()
 
 // Filtrar citas del paciente actual
 const userCitas = computed(() => {
   if (!allCitas.value) return []
-  
-  // TODO: Cuando tengan auth, filtrar por el pacienteId real
-  // Por ahora muestra todas las citas
-  return allCitas.value.filter(cita => cita.pacienteId === currentUser.value.id)
+  return allCitas.value
 })
 
 // Aplicar filtros
@@ -123,17 +122,17 @@ const handleDelete = async (citaId) => {
     })
     
     await refresh()
-    showNotification('Cita eliminada exitosamente')
+    addToast('Cita eliminada exitosamente')
   } catch (err) {
     console.error('Error al eliminar cita:', err)
-    showNotification('Error al eliminar la cita', 'error')
+    addToast('Error al eliminar la cita', 'error')
   }
 }
 
 // Reprogramar cita (redirigir a agendar)
 const handleReschedule = (cita) => {
   // TODO: Podrías pasar los datos de la cita actual para pre-llenar el formulario
-  navigateTo('/citas')
+  navigateTo('/citas/add')
 }
 </script>
 
@@ -151,7 +150,7 @@ const handleReschedule = (cita) => {
       <Button 
         label="Agendar Cita +" 
         variant="green-1"
-        to="/citas"
+        to="/citas/add"
         size="md"
       />
     </div>
@@ -207,16 +206,7 @@ const handleReschedule = (cita) => {
       </button>
     </div>
 
-    <!-- Notificación -->
-    <div 
-      v-if="notification.show" 
-      :class="[
-        'mb-4 rounded-md p-4 text-white',
-        notification.type === 'error' ? 'bg-red-600' : 'bg-green-600'
-      ]"
-    >
-      {{ notification.message }}
-    </div>
+
 
     <!-- Loading -->
     <div v-if="pending" class="text-center py-12">
