@@ -20,7 +20,7 @@ definePageMeta({
       </NuxtLink>
       
       <NuxtLink 
-        to="/citas"
+        to="/citas/add"
         class="block p-8 rounded-lg border-2 border-primary hover:bg-primary hover:text-white transition-all shadow-md text-center"
       >
         <h2 class="text-2xl font-semibold">Agendar Cita</h2>

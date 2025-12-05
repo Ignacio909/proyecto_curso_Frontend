@@ -20,16 +20,29 @@ const handleLogin = async () => {
   isSubmitting.value = true
   authError.value = ''
   try {
+    // 1. Pre-check: Validar credenciales directamente para obtener el mensaje de error exacto
+    try {
+      await $fetch(`${useRuntimeConfig().public.apiBase}/autenticacionRoutes/login`, {
+        method: 'POST',
+        body: { correo: formData.value.correo, contrasena: formData.value.contrasena }
+      })
+    } catch (err) {
+      // Si falla, mostramos el mensaje exacto del backend
+      if (err.data && err.data.message) {
+        throw new Error(err.data.message)
+      } else {
+        throw err
+      }
+    }
+
+    // 2. Si pasa el pre-check, iniciamos sesión con next-auth (que no debería fallar)
     const result = await signIn(
       { correo: formData.value.correo, contrasena: formData.value.contrasena },
       { redirect: false }
     )
 
     if (result?.error) {
-      authError.value = result.error === 'CredentialsSignin'
-        ? 'Correo o contraseña incorrectos'
-        : result.error
-      return
+      throw new Error(result.error)
     }
 
     await refresh()
@@ -42,7 +55,7 @@ const handleLogin = async () => {
       await navigateTo('/home')
     }
   } catch (e) {
-    authError.value = 'No fue posible iniciar sesión. Intenta nuevamente.'
+    authError.value = e.message || 'No fue posible iniciar sesión. Intenta nuevamente.'
   } finally {
     isSubmitting.value = false
   }
@@ -75,7 +88,7 @@ const handleLogin = async () => {
             <input
               v-model="formData.correo"
               type="text"
-              
+              placeholder="ejemplo@correo.com"
               class="w-full px-4 py-3 border-2 border-black rounded-md text-lg focus:outline-none focus:border-primary transition"
             />
           </div>
@@ -88,7 +101,7 @@ const handleLogin = async () => {
             <input
               v-model="formData.contrasena"
               type="password"
-              
+              placeholder="********"
               class="w-full px-4 py-3 border-2 border-black rounded-md text-lg focus:outline-none focus:border-primary transition"
             />
           </div>

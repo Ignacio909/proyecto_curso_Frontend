@@ -6,19 +6,22 @@ definePageMeta({
 
 
 // TODO: Cuando tengan autenticación, obtener el pacienteId del usuario autenticado
-const { currentUser } = useAuth()
+const { currentUser, token } = useAuth()
 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 
 // Cargar citas del paciente
 // TODO: Usar el ID real del paciente cuando esté disponible en currentUser
-const pacienteId = currentUser.value?.id 
+const pacienteId = computed(() => currentUser.value?.id)
 const { data: allCitas, pending, error, refresh } = await useFetch(
-  pacienteId ? `${apiBase}/citas/paciente/${pacienteId}` : null,
+  () => pacienteId.value ? `${apiBase}/citas/paciente/${pacienteId.value}` : null,
   {
-    immediate: !!pacienteId,
-    watch: [currentUser]
+    immediate: !!pacienteId.value,
+    watch: [pacienteId],
+    headers: {
+      Authorization: token.value || ''
+    }
   }
 )
 
@@ -118,7 +121,10 @@ const handleDelete = async (citaId) => {
   
   try {
     await $fetch(`${apiBase}/citas/${citaId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        Authorization: token.value || ''
+      }
     })
     
     await refresh()
@@ -342,7 +348,7 @@ const handleReschedule = (cita) => {
         <Button 
           label="Agendar Primera Cita" 
           variant="green-1"
-          to="/citas"
+          to="/citas/add"
           size="lg"
           class="mt-6"
         />

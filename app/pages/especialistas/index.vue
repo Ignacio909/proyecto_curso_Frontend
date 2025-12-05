@@ -12,7 +12,7 @@ const { token } = useAuth()
 const { data: specialists, pending, error, refresh } = await useFetch(`${apiBase}/especialistas`, {
   key: 'specialists-list',
   headers: {
-    Authorization: `Bearer ${token.value}`
+    Authorization: token.value
   }
 })
 
@@ -111,7 +111,7 @@ const saveEdit = async (formData) => {
 
     await $fetch(`${apiBase}/especialistas/${selectedSpecialist.value.id}`, {
       method: 'PUT',
-      headers: { Authorization: `Bearer ${token.value}` },
+      headers: { Authorization: token.value },
       body: payload
     })
     
@@ -128,7 +128,7 @@ const confirmDelete = async () => {
   try {
     await $fetch(`${apiBase}/especialistas/${selectedSpecialist.value.id}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token.value}` }
+      headers: { Authorization: token.value }
     })
     
     showDeleteModal.value = false
@@ -144,7 +144,7 @@ const saveAdd = async (formData) => {
   try {
     await $fetch(`${apiBase}/especialistas`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token.value}` },
+      headers: { Authorization: token.value },
       body: {
         usuario: formData.usuario,
         correo: formData.correo,

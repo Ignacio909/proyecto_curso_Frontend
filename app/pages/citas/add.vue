@@ -1,15 +1,21 @@
 <script setup>
 definePageMeta({
+  layout: 'default',
   auth: true
 })
 // TODO: Cuando tengan autenticación, obtener el pacienteId del usuario autenticado
-const { currentUser } = useAuth()
+const { currentUser, token } = useAuth()
 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 
-// Cargar especialistas
-const { data: specialists, pending: loadingSpecialists } = await useFetch(`${apiBase}/especialistas`)
+// Cargar especialistas - hacerlo reactivo al token
+const { data: specialists, pending: loadingSpecialists } = await useFetch(`${apiBase}/especialistas`, {
+  key: 'especialistas-list',
+  watch: [token],
+  headers: computed(() => ({
+    Authorization: token.value }))
+})
 
 // Formulario
 const formData = ref({
@@ -20,22 +26,6 @@ const formData = ref({
 
 // ... imports
 const { addToast } = useToast()
-
-// ... existing code ...
-
-// Remove notification ref and showNotification function
-// const notification = ref({ show: false, message: '', type: '' })
-// const showNotification = ...
-
-// ...
-
-// In handleSubmit:
-// showNotification('...', 'error') -> addToast('...', 'error')
-// showNotification('Cita agendada exitosamente') -> addToast('Cita agendada exitosamente', 'success')
-
-// In template:
-// Remove the notification div
-
 
 // Calcular rango de fechas (2 meses desde hoy, solo lunes a viernes)
 const minDate = computed(() => {
@@ -61,7 +51,7 @@ const validateWeekday = (date) => {
 watch([() => formData.value.fecha, () => formData.value.especialistaId], async ([newFecha, newEspecialistaId]) => {
   // Validar que la fecha sea de lunes a viernes
   if (newFecha && !validateWeekday(newFecha)) {
-    showNotification('Solo puedes agendar citas de lunes a viernes', 'error')
+    addToast('Solo puedes agendar citas de lunes a viernes', 'error')
     formData.value.fecha = ''
     availableHours.value = []
     return
@@ -74,12 +64,29 @@ watch([() => formData.value.fecha, () => formData.value.especialistaId], async (
   }
 })
 
+const availableHours = ref([])
+const loadingHours = ref(false)
+const allHours = [
+  { value: '09:00', label: '09:00 AM' },
+  { value: '10:00', label: '10:00 AM' },
+  { value: '11:00', label: '11:00 AM' },
+  { value: '12:00', label: '12:00 PM' },
+  { value: '14:00', label: '02:00 PM' },
+  { value: '15:00', label: '03:00 PM' },
+  { value: '16:00', label: '04:00 PM' },
+  { value: '17:00', label: '05:00 PM' }
+]
+
 const loadAvailableHours = async (fecha, especialistaId) => {
   try {
     loadingHours.value = true
     
     // Obtener todas las citas del especialista para esa fecha
-    const { data: allCitas } = await useFetch(`${apiBase}/citas`)
+    const { data: allCitas } = await useFetch(`${apiBase}/citas`, {
+      headers: {
+        Authorization: token.value ? `Bearer ${token.value}` : undefined
+      }
+    })
     
     // Filtrar citas reservadas para ese especialista y fecha
     const reservedHours = allCitas.value
@@ -116,6 +123,9 @@ const handleSubmit = async () => {
     
     await $fetch(`${apiBase}/citas`, {
       method: 'POST',
+      headers: {
+        Authorization: token.value ? `Bearer ${token.value}` : undefined
+      },
       body: {
         fecha: formData.value.fecha,
         hora: formData.value.hora,

@@ -1,6 +1,6 @@
 <script setup>
 definePageMeta({
-  layout: 'admin',
+  layout: 'default',
   auth: true
 })
 
@@ -12,7 +12,7 @@ const { token } = useAuth()
 const { data: patients, pending, error, refresh } = await useFetch(`${apiBase}/pacientes`, {
   key: 'patients-list',
   headers: {
-    Authorization: `Bearer ${token.value}`
+    Authorization: token.value
   }
 })
 
@@ -119,7 +119,7 @@ const saveEdit = async (formData) => {
 
     await $fetch(`${apiBase}/pacientes/${selectedPatient.value.id}`, {
       method: 'PUT',
-      headers: { Authorization: `Bearer ${token.value}` },
+      headers: { Authorization: token.value },
       body: payload
     })
     
@@ -136,7 +136,7 @@ const confirmDelete = async () => {
   try {
     await $fetch(`${apiBase}/pacientes/${selectedPatient.value.id}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token.value}` }
+      headers: { Authorization: token.value }
     })
     
     showDeleteModal.value = false
@@ -152,7 +152,7 @@ const saveAdd = async (formData) => {
   try {
     await $fetch(`${apiBase}/pacientes`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token.value}` },
+      headers: { Authorization: token.value },
       body: {
         usuario: formData.usuario,
         correo: formData.correo,

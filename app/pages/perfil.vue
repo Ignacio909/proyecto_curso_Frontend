@@ -15,14 +15,17 @@ const formData = ref({
   contrasenaAnterior: '',
   contrasenaNueva: '',
   // Campos específicos por rol
-  telefono: data.value?.telefono || '',
-  carnetIdentidad: data.value?.carnetIdentidad || '',
-  especialidad: data.value?.especialidad || ''
+  telefono: data.value?.paciente?.telefono || '',
+  carnetIdentidad: data.value?.paciente?.carnetIdentidad || '',
+  especialidad: data.value?.especialista?.especialidad || ''
 })
 
 
 
 
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase
+const { token } = useAuth()
 const { addToast } = useToast()
 
 // Determinar qué ruta de retorno según el rol
@@ -31,12 +34,89 @@ const backRoute = computed(() => {
   return '/home'
 })
 
+// Manejo de imagen
+const selectedImage = ref(null)
+const imagePreview = ref(null)
+const fileInputRef = ref(null)
+
+const handleImageSelect = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    selectedImage.value = file
+    // Crear preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      imagePreview.value = e.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+const triggerImageUpload = () => {
+  fileInputRef.value?.click()
+}
+
 const handleSave = async () => {
   try {
-    // TODO: Cuando tengan autenticación, aquí irá la llamada al API
-    // Por ahora solo muestra un mensaje
-    console.log('Datos a guardar:', formData.value)
+    const userId = data.value?.id
+    if (!userId) {
+      addToast('Error: No se pudo obtener el ID del usuario', 'error')
+      return
+    }
+
+    // Crear FormData para soportar archivos
+    const uploadData = new FormData()
+    uploadData.append('usuario', formData.value.usuario)
+    uploadData.append('correo', formData.value.correo)
+
+    // Agregar contraseñas solo si se proporcionaron ambas
+    if (formData.value.contrasenaAnterior && formData.value.contrasenaNueva) {
+      uploadData.append('contrasenaAnterior', formData.value.contrasenaAnterior)
+      uploadData.append('contrasena', formData.value.contrasenaNueva)
+    }
+
+    // Agregar campos específicos por rol
+    if (isPaciente.value) {
+      uploadData.append('telefono', formData.value.telefono)
+      uploadData.append('carnetIdentidad', formData.value.carnetIdentidad)
+    } else if (isEspecialista.value) {
+      uploadData.append('especialidad', formData.value.especialidad)
+    }
+
+    // Agregar imagen si se seleccionó
+    if (selectedImage.value) {
+      uploadData.append('imagen', selectedImage.value)
+    }
+
+    // Determinar endpoint según rol
+    let endpoint = ''
+    if (isPaciente.value) {
+      endpoint = `${apiBase}/pacientes/${userId}`
+    } else if (isEspecialista.value) {
+      endpoint = `${apiBase}/especialistas/${userId}`
+    } else {
+      addToast('Actualización de perfil no implementada para este rol', 'error')
+      return
+    }
+
+    await $fetch(endpoint, {
+      method: 'PUT',
+      headers: {
+        Authorization: token.value
+      },
+      body: uploadData
+    })
+
     addToast('Perfil actualizado exitosamente')
+    
+    // Limpiar imagen seleccionada
+    selectedImage.value = null
+    imagePreview.value = null
+    
+    // Recargar sesión para obtener datos actualizados
+    setTimeout(() => {
+      window.location.reload()
+    }, 1500)
   } catch (err) {
     console.error('Error al actualizar perfil:', err)
     addToast('Error al actualizar perfil', 'error')
@@ -66,19 +146,39 @@ const handleSave = async () => {
 
 
 
+
+
     <div class="flex flex-col items-center gap-3 py-6">
+      <!-- Hidden file input -->
+      <input 
+        ref="fileInputRef"
+        type="file" 
+        accept="image/*" 
+        @change="handleImageSelect"
+        class="hidden"
+      />
+      
+      <!-- Image preview or current image -->
       <div 
-        v-if="data?.imagen"
         class="h-28 w-28 rounded-full bg-primary/20 ring-4 ring-primary/30 overflow-hidden"
       >
-        <img :src="data?.imagen" alt="Perfil" class="h-full w-full object-cover" />
+        <img 
+          v-if="imagePreview || data?.imagen" 
+          :src="imagePreview || data?.imagen" 
+          alt="Perfil" 
+          class="h-full w-full object-cover" 
+        />
       </div>
-      <div v-else class="h-28 w-28 rounded-full bg-primary/20 ring-4 ring-primary/30" />
+      
       <Button 
         label="Cambiar Imagen" 
         variant="green-2"
         size="sm"
+        :onClick="triggerImageUpload"
       />
+      <p v-if="selectedImage" class="text-sm text-green-600">
+        Imagen seleccionada: {{ selectedImage.name }}
+      </p>
     </div>
 
     <div class="rounded-md border border-black/50 p-6">

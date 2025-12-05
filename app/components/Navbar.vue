@@ -1,7 +1,22 @@
 <script setup>
 const { data, status, signOut } = useAuth()
 const role = computed(() => data.value?.rol)
-const onSignOut = async () => { try { await signOut(); navigateTo('/') } catch (e) {} }
+const onSignOut = async () => { 
+  try { 
+    await signOut({ callbackUrl: '/' })
+    // Limpiar cualquier dato en localStorage
+    localStorage.clear()
+    sessionStorage.clear()
+    // Forzar recarga para asegurar que se limpie todo
+    window.location.href = '/'
+  } catch (e) {
+    console.error('Error al cerrar sesión:', e)
+    // Aún así intentar limpiar y redirigir
+    localStorage.clear()
+    sessionStorage.clear()
+    window.location.href = '/'
+  } 
+}
 </script>
 
 <template>
@@ -28,8 +43,10 @@ const onSignOut = async () => { try { await signOut(); navigateTo('/') } catch (
       </ul>
       <ul v-else-if="role === 'especialista'" class="flex items-center gap-8 text-lg flex-1 justify-center">
         <li><NuxtLink to="/perfil" class="hover:underline">Mi Perfil</NuxtLink></li>
+        <li><NuxtLink to="/citas/gestion" class="hover:underline">Citas</NuxtLink></li>
+        <li><NuxtLink to="/citas/hoy" class="hover:underline">Citas del Día</NuxtLink></li>
+        <li><NuxtLink to="/historias-clinicas" class="hover:underline">Historias Clínicas</NuxtLink></li>
         <li><NuxtLink to="/pacientes" class="hover:underline">Pacientes</NuxtLink></li>
-        <li><NuxtLink to="/citas/mis-citas" class="hover:underline">Mis Citas</NuxtLink></li>
       </ul>
       <ul v-else-if="role === 'admin'" class="flex items-center gap-8 text-lg flex-1 justify-center">
         <li><NuxtLink to="/admin" class="hover:underline">Administración</NuxtLink></li>

@@ -180,7 +180,7 @@
         <Button 
           label="Agendar una Cita" 
           variant="green-1"
-          to="/citas"
+          to="/citas/add"
           size="lg"
         />
       </div>
