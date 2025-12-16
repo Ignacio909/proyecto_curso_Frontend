@@ -4,7 +4,7 @@ definePageMeta({
   auth: true
 })
 
-const { currentUser, token } = useAuth()
+const { data: currentUser, token } = useAuth()
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 const { addToast } = useToast()

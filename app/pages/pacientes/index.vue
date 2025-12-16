@@ -6,7 +6,7 @@ definePageMeta({
 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
-const { token } = useAuth()
+const { data: currentUser, token } = useAuth()
 
 // Usar useFetch para cargar datos (GET) - SSR
 const { data: patients, pending, error, refresh } = await useFetch(`${apiBase}/pacientes`, {

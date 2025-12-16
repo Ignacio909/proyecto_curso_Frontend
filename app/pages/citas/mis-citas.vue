@@ -6,14 +6,14 @@ definePageMeta({
 
 
 // TODO: Cuando tengan autenticación, obtener el pacienteId del usuario autenticado
-const { currentUser, token } = useAuth()
+const { data: currentUser, token } = useAuth()
 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 
 // Cargar citas del paciente
 // TODO: Usar el ID real del paciente cuando esté disponible en currentUser
-const pacienteId = computed(() => currentUser.value?.id)
+const pacienteId = computed(() => currentUser.value?.paciente?.id)
 const { data: allCitas, pending, error, refresh } = await useFetch(
   () => pacienteId.value ? `${apiBase}/citas/paciente/${pacienteId.value}` : null,
   {

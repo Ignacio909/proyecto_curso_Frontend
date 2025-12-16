@@ -4,12 +4,12 @@ definePageMeta({
   auth: true
 })
 
-const { currentUser, token } = useAuth()
+const { data: currentUser, token } = useAuth()
 const { addToast } = useToast()
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 
-const especialistaId = computed(() => currentUser.value?.id)
+const especialistaId = computed(() => currentUser.value?.especialista?.id)
 
 // Cargar citas
 const { data: citas, pending, refresh } = await useFetch(

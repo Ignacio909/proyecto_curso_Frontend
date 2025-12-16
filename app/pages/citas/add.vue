@@ -4,7 +4,7 @@ definePageMeta({
   auth: true
 })
 // TODO: Cuando tengan autenticación, obtener el pacienteId del usuario autenticado
-const { currentUser, token } = useAuth()
+const { data: currentUser, token } = useAuth()
 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
@@ -14,7 +14,7 @@ const { data: specialists, pending: loadingSpecialists } = await useFetch(`${api
   key: 'especialistas-list',
   watch: [token],
   headers: computed(() => ({
-    Authorization: token.value }))
+    Authorization: token.value || '' }))
 })
 
 // Formulario
@@ -82,15 +82,15 @@ const loadAvailableHours = async (fecha, especialistaId) => {
     loadingHours.value = true
     
     // Obtener todas las citas del especialista para esa fecha
-    const { data: allCitas } = await useFetch(`${apiBase}/citas`, {
+    const { data: allCitas } = await useFetch(`${apiBase}/citas/especialista/${especialistaId}`, {
       headers: {
-        Authorization: token.value ? `Bearer ${token.value}` : undefined
+        Authorization: token.value || ''
       }
     })
     
     // Filtrar citas reservadas para ese especialista y fecha
     const reservedHours = allCitas.value
-      ?.filter(cita => cita.especialistaId === especialistaId && cita.fecha === fecha)
+      ?.filter(cita => cita.fecha === fecha)
       .map(cita => cita.hora) || []
     
     // Filtrar horas disponibles
@@ -119,12 +119,12 @@ const handleSubmit = async () => {
     
     // TODO: Cuando tengan auth, usar el pacienteId real del usuario autenticado
     // Por ahora uso un ID de ejemplo (debes reemplazarlo)
-    const pacienteId = currentUser.value.id // Esto vendrá del sistema de auth
+    const pacienteId = currentUser.value?.paciente?.id // Esto vendrá del sistema de auth
     
     await $fetch(`${apiBase}/citas`, {
       method: 'POST',
       headers: {
-        Authorization: token.value ? `Bearer ${token.value}` : undefined
+        Authorization: token.value || ''
       },
       body: {
         fecha: formData.value.fecha,
@@ -152,7 +152,7 @@ const handleSubmit = async () => {
     
   } catch (err) {
     console.error('Error al agendar cita:', err)
-    addToast('Error al agendar la cita', 'error')
+    addToast('Error al agendar la cita: ' + (err.message || 'Desconocido'), 'error')
   }
 }
 </script>

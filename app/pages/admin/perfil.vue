@@ -5,7 +5,7 @@ definePageMeta({
 })
 
 // TODO: Cuando implementen el login, este composable traerá los datos reales del usuario autenticado
-const { data } = useAuth()
+const { data: currentUser } = useAuth()
 const isAdmin = computed(() => data.value?.rol === 'admin')
 
 // Formulario reactivo

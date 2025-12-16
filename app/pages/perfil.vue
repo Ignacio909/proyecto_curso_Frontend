@@ -3,7 +3,7 @@ definePageMeta({ layout: 'default',
                  auth: true }
 )
 // TODO: Cuando implementen el login, este composable traerá los datos reales del usuario autenticado
-const { data } = useAuth()
+const { data, token } = useAuth()
 const isAdmin = computed(() => data.value?.rol === 'admin')
 const isPaciente = computed(() => data.value?.rol === 'paciente')
 const isEspecialista = computed(() => data.value?.rol === 'especialista')
@@ -25,7 +25,6 @@ const formData = ref({
 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
-const { token } = useAuth()
 const { addToast } = useToast()
 
 // Determinar qué ruta de retorno según el rol
@@ -58,9 +57,18 @@ const triggerImageUpload = () => {
 
 const handleSave = async () => {
   try {
-    const userId = data.value?.id
+    // Obtener el ID correcto según el rol
+    let userId = null
+    if (isPaciente.value) {
+      userId = data.value?.paciente?.id
+    } else if (isEspecialista.value) {
+      userId = data.value?.especialista?.id
+    } else {
+      userId = data.value?.id // Fallback para admin u otros
+    }
+
     if (!userId) {
-      addToast('Error: No se pudo obtener el ID del usuario', 'error')
+      addToast('Error: No se pudo obtener el ID del perfil', 'error')
       return
     }
 
