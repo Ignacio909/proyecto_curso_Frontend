@@ -1,6 +1,6 @@
 <script setup>
 definePageMeta({ layout: 'default',
-                 auth: true }
+    auth: true }
 )
 // TODO: Cuando implementen el login, este composable traerá los datos reales del usuario autenticado
 const { data, token } = useAuth()
@@ -37,6 +37,18 @@ const backRoute = computed(() => {
 const selectedImage = ref(null)
 const imagePreview = ref(null)
 const fileInputRef = ref(null)
+
+// URL final para mostrar la imagen (preview o la del backend)
+const displayImage = computed(() => {
+  if (imagePreview.value) return imagePreview.value
+  const img = data.value?.imagen
+  if (!img) return null
+  // Si ya viene absoluta, úsala; si es relativa, prefijar apiBase
+  if (/^https?:\/\//i.test(img)) return img
+  // Normalizar si viene guardada como 'public/...'
+  const normalized = img.startsWith('public/') ? img.replace(/^public\//, '') : img
+  return `${apiBase}${normalized.startsWith('/') ? '' : '/'}${normalized}`
+})
 
 const handleImageSelect = (event) => {
   const file = event.target.files[0]
@@ -167,14 +179,12 @@ const handleSave = async () => {
       />
       
       <!-- Image preview or current image -->
-      <div 
-        class="h-28 w-28 rounded-full bg-primary/20 ring-4 ring-primary/30 overflow-hidden"
-      >
-        <img 
-          v-if="imagePreview || data?.imagen" 
-          :src="imagePreview || data?.imagen" 
-          alt="Perfil" 
-          class="h-full w-full object-cover" 
+      <div class="h-28 w-28 rounded-full bg-primary/20 ring-4 ring-primary/30 overflow-hidden">
+        <img
+          v-if="displayImage"
+          :src="displayImage"
+          alt="Perfil"
+          class="h-full w-full object-cover"
         />
       </div>
       

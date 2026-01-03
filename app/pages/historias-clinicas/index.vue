@@ -73,11 +73,15 @@ const handleEdit = (id) => {
   <section class="mx-auto w-full max-w-6xl px-4 py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-3xl font-bold text-primary">Historias Clínicas</h1>
-      <Button 
-        label="Nueva Historia" 
-        variant="green-1"
-        to="/historias-clinicas/crear" 
-      />
+      <NuxtLink to="/historias-clinicas/add">
+        <Button 
+          label="Nueva Historia Clínica" 
+          variant="green-1"
+          class="cursor-pointer"
+          @click="navigateTo('/historias-clinicas/add')"       
+        />
+      </NuxtLink>
+      
     </div>
 
     <div v-if="pending" class="text-center py-12">

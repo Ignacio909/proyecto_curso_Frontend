@@ -17,14 +17,14 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001',
+      apiBase: process.env.NUXT_PUBLIC_API_BASE,
     }
   },
 
   modules: ['@sidebase/nuxt-auth'],
 
   auth: {
-    baseURL: `${process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001'}/autenticacionRoutes`,
+    baseURL: `${process.env.NUXT_PUBLIC_API_BASE}/autenticacionRoutes`,
     provider: {
       type: 'local',
       endpoints: {
@@ -33,12 +33,14 @@ export default defineNuxtConfig({
         signUp: false,
         getSession: { path: '/user/profile', method: 'get' }
       },
+      
       token: {
         signInResponseTokenPointer: '/token',
         type: 'Bearer',
         headerName: 'Authorization',
         maxAgeInSeconds: 60 * 60
       },
+      
       refresh: {
         isEnabled: true,
         endpoint: { path: '/user/refreshtoken', method: 'post' },
@@ -50,7 +52,10 @@ export default defineNuxtConfig({
           maxAgeInSeconds: 60 * 60 * 24 * 7
         }
       },
-      session: {
+
+      globalAppMiddleware: true,
+
+      sessionDataType:{
         dataType: {
           id: 'string',
           usuario: 'string',
@@ -58,6 +63,10 @@ export default defineNuxtConfig({
           rol: '"paciente" | "especialista" | "admin"',
           imagen: 'string | null'
         }
+      },
+
+      session: {
+        enableRefreshOnWindowFocus: true,
       }
     }
   },

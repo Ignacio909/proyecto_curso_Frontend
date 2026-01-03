@@ -117,8 +117,7 @@ const handleSubmit = async () => {
       return
     }
     
-    // TODO: Cuando tengan auth, usar el pacienteId real del usuario autenticado
-    // Por ahora uso un ID de ejemplo (debes reemplazarlo)
+    
     const pacienteId = currentUser.value?.paciente?.id // Esto vendrá del sistema de auth
     
     await $fetch(`${apiBase}/citas`, {

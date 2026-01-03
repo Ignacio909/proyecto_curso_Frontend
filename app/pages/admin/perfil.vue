@@ -4,14 +4,14 @@ definePageMeta({
   auth: true
 })
 
-// TODO: Cuando implementen el login, este composable traerá los datos reales del usuario autenticado
+// Datos de sesión
 const { data: currentUser } = useAuth()
-const isAdmin = computed(() => data.value?.rol === 'admin')
+const isAdmin = computed(() => currentUser.value?.rol === 'admin')
 
 // Formulario reactivo
 const formData = ref({
-  usuario: data.value?.usuario || '',
-  correo: data.value?.correo || '',
+  usuario: currentUser.value?.usuario || '',
+  correo: currentUser.value?.correo || '',
   contrasenaAnterior: '',
   contrasenaNueva: ''
 })
@@ -24,6 +24,17 @@ const showNotification = (message, type = 'success') => {
     notification.value.show = false
   }, 3000)
 }
+
+// Mostrar imagen de perfil
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase
+const displayImage = computed(() => {
+  const img = currentUser.value?.imagen
+  if (!img) return null
+  if (/^https?:\/\//i.test(img)) return img
+  const normalized = img.startsWith('public/') ? img.replace(/^public\//, '') : img
+  return `${apiBase}${normalized.startsWith('/') ? '' : '/'}${normalized}`
+})
 
 const handleSave = async () => {
   try {
@@ -68,12 +79,10 @@ const handleSave = async () => {
 
     <div class="flex flex-col items-center gap-3 py-6">
       <div 
-        v-if="data?.imagen"
         class="h-28 w-28 rounded-full bg-primary/20 ring-4 ring-primary/30 overflow-hidden"
       >
-        <img :src="data?.imagen" alt="Perfil" class="h-full w-full object-cover" />
+        <img v-if="displayImage" :src="displayImage" alt="Perfil" class="h-full w-full object-cover" />
       </div>
-      <div v-else class="h-28 w-28 rounded-full bg-primary/20 ring-4 ring-primary/30" />
       <Button 
         label="Cambiar Imagen" 
         variant="green-2"

@@ -84,11 +84,19 @@ const classes = [
 </script>
 
 <template>
-  <button
-    :type="type"
-    :class="classes"
-    @click="handleClick"
+  <button 
+    :type="type" 
+    :class="[
+      'rounded-md font-medium transition-colors cursor-pointer',
+      variantClasses[variant],
+      sizeClasses[size],
+      position ? 'absolute' : 'relative',
+      positionClasses[position],
+      'text-white shadow-sm flex items-center justify-center gap-2'
+    ]"
+    @click="handleClick" 
   >
+    <slot name="icon"></slot>
     {{ label }}
   </button>
 </template>

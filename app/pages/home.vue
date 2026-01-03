@@ -2,13 +2,27 @@
 definePageMeta({
   auth: true
 })
+
+const { data } = useAuth()
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase
+
+const displayName = computed(() => data.value?.usuario || 'Usuario')
+const displayImage = computed(() => {
+  const img = data.value?.imagen
+  if (!img) return null
+  if (/^https?:\/\//i.test(img)) return img
+  return `${apiBase}${img.startsWith('/') ? '' : '/'}${img}`
+})
 </script>
 
 <template>
   <section class="flex flex-col items-center gap-8">
     <div class="flex flex-col items-center gap-3 mt-6">
-      <div class="h-28 w-28 rounded-full bg-primary/20 ring-4 ring-primary/30" />
-      <h2 class="text-2xl font-semibold">Hola …</h2>
+      <div class="h-28 w-28 rounded-full bg-primary/20 ring-4 ring-primary/30 overflow-hidden">
+        <img v-if="displayImage" :src="displayImage" alt="Avatar" class="h-full w-full object-cover" />
+      </div>
+      <h2 class="text-2xl font-semibold">Hola {{ displayName }}</h2>
     </div>
 
     <div class="grid w-full grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-2 mt-4">

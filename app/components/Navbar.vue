@@ -1,5 +1,8 @@
 <script setup>
 const { data, status, signOut } = useAuth()
+watch(data, (newData) => {
+  console.log("Datos recibidos en el Frontend:", newData)
+}, { immediate: true })
 const role = computed(() => data.value?.rol)
 const onSignOut = async () => { 
   try { 
@@ -20,54 +23,55 @@ const onSignOut = async () => {
 </script>
 
 <template>
-  <header class="bg-primary text-white">
-    <nav class="container mx-auto flex items-center px-6 py-4">
-      <!-- Logo y nombre a la izquierda -->
+  <header class="bg-primary text-white w-full">
+    <nav class="w-full flex items-center justify-between px-4 py-4 md:px-8">
+      
       <div class="flex items-center gap-3 flex-shrink-0">
         <img 
           src="/logo WEB CAIBH.webp" 
           alt="Logo CAIBH" 
-          class="h-10 w-10 object-contain"
+          class="h-12 w-12 object-contain bg-white rounded-full p-1"
         />
-        <NuxtLink to="/home" class="text-base font-semibold whitespace-nowrap">
+        <NuxtLink to="/home" class="text-base font-semibold hidden lg:block">
           Centro Atencion Integral para el Bienestar Humano
+        </NuxtLink>
+        <NuxtLink to="/home" class="text-base font-semibold lg:hidden">
+          CAIBH
         </NuxtLink>
       </div>
 
-      <!-- Patient menu centrado -->
-      <ul v-if="role === 'paciente'" class="flex items-center gap-8 text-lg flex-1 justify-center">
-        <li><NuxtLink to="/perfil" class="hover:underline">Mi Perfil</NuxtLink></li>
-        <li><NuxtLink to="/citas/mis-citas" class="hover:underline">Mis Citas</NuxtLink></li>
-        <li><NuxtLink to="/citas/add" class="hover:underline">Agendar Cita</NuxtLink></li>
-        <li><NuxtLink to="/sobre-nosotros" class="hover:underline">Sobre Nosotros</NuxtLink></li>
-      </ul>
-      <ul v-else-if="role === 'especialista'" class="flex items-center gap-8 text-lg flex-1 justify-center">
-        <li><NuxtLink to="/perfil" class="hover:underline">Mi Perfil</NuxtLink></li>
-        <li><NuxtLink to="/citas/gestion" class="hover:underline">Citas</NuxtLink></li>
-        <li><NuxtLink to="/citas/hoy" class="hover:underline">Citas del Día</NuxtLink></li>
-        <li><NuxtLink to="/historias-clinicas" class="hover:underline">Historias Clínicas</NuxtLink></li>
-        <li><NuxtLink to="/pacientes" class="hover:underline">Pacientes</NuxtLink></li>
-      </ul>
-      <ul v-else-if="role === 'admin'" class="flex items-center gap-8 text-lg flex-1 justify-center">
-        <li><NuxtLink to="/admin" class="hover:underline">Administración</NuxtLink></li>
-      </ul>
-      <div v-else class="flex-1" />
+      <div class="flex-1 flex justify-center px-4">
+        <ul v-if="role === 'paciente'" class="flex items-center gap-4 xl:gap-8 text-lg whitespace-nowrap">
+          <li><NuxtLink to="/perfil" class="hover:text-black transition-colors">Mi Perfil</NuxtLink></li>
+          <li><NuxtLink to="/citas/mis-citas" class="hover:text-black transition-colors">Mis Citas</NuxtLink></li>
+          <li><NuxtLink to="/citas/add" class="hover:text-black transition-colors">Agendar Cita</NuxtLink></li>
+          <li><NuxtLink to="/sobre-nosotros" class="hover:text-black transition-colors">Sobre Nosotros</NuxtLink></li>
+        </ul>
 
-      <!-- Botón a la derecha -->
-      <div class="flex-shrink-0">
-        <Button v-if="status === 'authenticated'"
+        <ul v-else-if="role === 'especialista'" class="flex items-center gap-4 xl:gap-6 text-lg whitespace-nowrap">
+          <li><NuxtLink to="/perfil" class="hover:text-black transition-colors">Mi Perfil</NuxtLink></li>
+          <li><NuxtLink to="/citas/gestion" class="hover:text-black transition-colors">Citas</NuxtLink></li>
+          <li><NuxtLink to="/citas/hoy" class="hover:text-black transition-colors">Citas del Día</NuxtLink></li>
+          <li><NuxtLink to="/historias-clinicas" class="hover:text-black transition-colors">Historias Clínicas</NuxtLink></li>
+          <li><NuxtLink to="/pacientes" class="hover:text-black transition-colors">Pacientes</NuxtLink></li>
+        </ul>
+
+        <ul v-else-if="role === 'admin'" class="flex items-center gap-8 text-lg whitespace-nowrap">
+          <li><NuxtLink to="/admin" class="hover:text-black transition-colors">Administración</NuxtLink></li>
+        </ul>
+      </div>
+
+      <div class="flex-shrink-0 flex items-center justify-end">
+        <Button 
+          v-if="data?.rol"
           label="Cerrar Sesión" 
-          variant="green-1"
-          :onClick="onSignOut"
+          variant="green-1" 
           size="sm"
-        />
-        <Button v-else
-          label="Iniciar Sesión" 
-          variant="green-1"
-          to="/"
-          size="sm"
+          class="!rounded-full !shadow-sm !text-white transition-all active:scale-95"
+          @click="onSignOut"
         />
       </div>
+
     </nav>
   </header>
 </template>
