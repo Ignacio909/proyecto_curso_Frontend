@@ -67,6 +67,37 @@ const triggerImageUpload = () => {
   fileInputRef.value?.click()
 }
 
+// --- LÓGICA PARA 2FA ---
+const qrCodeUrl = ref(null);
+const tfaStep = ref(data.value?.twoFactorEnabled ? 'active' : 'initial');
+const tfaToken = ref('');
+
+const setup2FA = async () => {
+  try {
+    const response = await $fetch(`${apiBase}/autenticacionRoutes/2fa/generate`, {
+      method: 'POST',
+      headers: { Authorization: token.value }
+    });
+    qrCodeUrl.value = response.qrCodeUrl;
+    tfaStep.value = 'scanning';
+  } catch (e) {
+    addToast({ title: 'Error', description: 'No se pudo generar el QR', type: 'error' });
+  }
+};
+
+const confirm2FA = async () => {
+  try {
+    await $fetch(`${apiBase}/autenticacionRoutes/2fa/verify`, {
+      method: 'POST',
+      body: { token: tfaToken.value },
+      headers: { Authorization: token.value }
+    });
+    addToast({ title: 'Éxito', description: '2FA activado correctamente', type: 'success' });
+    tfaStep.value = 'active';
+  } catch (e) {
+    addToast({ title: 'Error', description: 'Código incorrecto o expirado', type: 'error' });
+  }
+};
 const handleSave = async () => {
   try {
     // Obtener el ID correcto según el rol
@@ -289,6 +320,45 @@ const handleSave = async () => {
           />
         </div>
       </form>
+      
+      <div class="mt-10 pt-8 border-t-2 border-gray-100">
+          <h3 class="text-2xl font-bold mb-4 text-primary flex items-center gap-2">
+            <span class="text-2xl">🔒</span> Seguridad de la Cuenta
+          </h3>
+          
+          <div v-if="tfaStep === 'initial'" class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+            <p class="mb-4 text-gray-700 font-medium">Protege tu cuenta con un segundo factor de autenticación (TOTP).</p>
+            <Button label="Configurar 2FA ahora" @click="setup2FA" variant="primary" />
+          </div>
+
+          <div v-if="tfaStep === 'scanning'" class="flex flex-col items-center bg-gray-50 p-8 rounded-2xl border-2 border-dashed border-gray-200">
+            <p class="mb-6 text-center text-gray-600">
+              1. Escanea este código con <b>Google Authenticator</b> o <b>Authy</b>.<br>
+              2. Introduce el código de 6 dígitos que aparece en tu app.
+            </p>
+            <img :src="qrCodeUrl" alt="QR Code" class="mb-6 border-4 border-white shadow-xl rounded-xl w-48 h-48" />
+            
+            <div class="w-full max-w-xs space-y-4">
+              <input 
+                v-model="tfaToken" 
+                type="text"
+                placeholder="000 000"
+                maxlength="6"
+                class="w-full text-center text-2xl tracking-[0.5em] font-bold rounded-md border-2 border-black px-4 py-3 focus:outline-none focus:border-primary" 
+              />
+              <Button label="Verificar y Activar" @click="confirm2FA" class="w-full" />
+              <button @click="tfaStep = 'initial'" class="text-sm text-gray-500 underline w-full text-center">Cancelar</button>
+            </div>
+          </div>
+
+          <div v-if="tfaStep === 'active'" class="bg-green-50 p-6 rounded-2xl border border-green-200 flex items-center gap-4">
+            <div class="bg-green-500 text-white rounded-full p-2">✓</div>
+            <div>
+              <p class="font-bold text-green-800">El Segundo Factor (2FA) está activo</p>
+              <p class="text-green-600 text-sm">Tu cuenta está protegida por códigos temporales.</p>
+            </div>
+          </div>
+        </div>
     </div>
   </section>
 </template>
