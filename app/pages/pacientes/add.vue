@@ -4,6 +4,13 @@
     auth: { unauthenticatedOnly: true, navigateAuthenticatedTo: '/home' }
   })
   
+  useSeoMeta({
+    title: 'Registro de Pacientes - CAIBH',
+    description: 'Crea tu cuenta para acceder a servicios médicos en línea.',
+    ogTitle: 'Regístrate en CAIBH',
+    ogDescription: 'Únete a nuestra plataforma de salud digital.',
+  })
+  
   const form = reactive({
     usuario: '',
     telefono: '', // Aquí guardaremos solo los 8 dígitos

@@ -37,11 +37,37 @@ const citasHoy = computed(() => {
     })
 })
 
-const handleAttend = (cita) => {
-  // Lógica placeholder por ahora
-  console.log('Atendiendo cita:', cita)
-  addToast('Iniciando atención de cita...', 'info')
-  // Aquí redirigiríamos a la vista de atención o historia clínica
+// hoy.vue - Actualiza handleAttend
+const handleAttend = async (cita) => {
+  try {
+    // 1. Verificar si el paciente tiene historia clínica
+    // Suponemos que tienes un endpoint que busca historia por pacienteId
+    const historia = await $fetch(`${apiBase}/historias-clinicas/paciente/${cita.pacienteId}`, {
+       headers: { Authorization: token.value }
+    });
+
+    if (!historia) {
+      // Caso A: No tiene historia
+      addToast({ 
+        title: 'Paciente sin Historia', 
+        description: 'Redirigiendo para crear la historia clínica base.', 
+        type: 'info' 
+      });
+      // Navegamos pasando el ID del paciente para que 'add.vue' lo reconozca
+      await navigateTo(`/historias-clinicas/add?pacienteId=${cita.pacienteId}`);
+    } else {
+      // Caso B: Ya tiene historia
+      // Lo enviamos a la vista de atención (que diseñaremos abajo)
+      await navigateTo(`/atencion/${historia.id}?citaId=${cita.id}`);
+    }
+  } catch (err) {
+    // Si el error es 404 (no encontrado), también redirigimos a crear
+    if (err.status === 404) {
+      await navigateTo(`/historias-clinicas/add?pacienteId=${cita.pacienteId}`);
+    } else {
+      addToast({ title: 'Error', description: 'No se pudo verificar el historial', type: 'error' });
+    }
+  }
 }
 
 // Formatear hora

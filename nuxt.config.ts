@@ -21,7 +21,27 @@ export default defineNuxtConfig({
     }
   },
 
-  modules: ['@sidebase/nuxt-auth'],
+  modules: [
+    '@sidebase/nuxt-auth',
+    '@nuxtjs/seo'
+  ],
+
+  site: {
+    url: 'https://tu-dominio.com', // REEMPLAZAR con tu dominio real cuando lo tengas
+    name: 'Proyecto Curso',
+    description: 'Sistema de gestión de historias clínicas y citas médicas.',
+    defaultLocale: 'es',
+  },
+
+  app: {
+    head: {
+      htmlAttrs: {
+        lang: 'es'
+      },
+      charset: 'utf-8',
+      viewport: 'width=device-width, initial-scale=1',
+    }
+  },
 
   auth: {
     baseURL: `${process.env.NUXT_PUBLIC_API_BASE}/autenticacionRoutes`,
@@ -33,14 +53,14 @@ export default defineNuxtConfig({
         signUp: false,
         getSession: { path: '/user/profile', method: 'get' }
       },
-      
+
       token: {
         signInResponseTokenPointer: '/token',
         type: 'Bearer',
         headerName: 'Authorization',
         maxAgeInSeconds: 60 * 60
       },
-      
+
       refresh: {
         isEnabled: true,
         endpoint: { path: '/user/refreshtoken', method: 'post' },
@@ -55,7 +75,7 @@ export default defineNuxtConfig({
 
       globalAppMiddleware: true,
 
-      sessionDataType:{
+      sessionDataType: {
         dataType: {
           id: 'string',
           usuario: 'string',

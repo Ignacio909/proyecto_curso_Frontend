@@ -1,3 +1,27 @@
+<script setup>
+definePageMeta({
+  auth: false
+})
+
+useSeoMeta({
+  title: 'Sobre Nosotros - CAIBH',
+  description: 'Conoce nuestra misión, visión y valores. Centro de Atención Integral para el Bienestar Humano.',
+  ogTitle: 'Sobre Nosotros - CAIBH',
+  ogDescription: 'Somos un equipo multidisciplinario comprometido con tu salud mental y bienestar.',
+})
+
+useSchemaOrg([
+  defineOrganization({
+    name: 'CAIBH',
+    logo: '/logo WEB CAIBH.webp',
+    sameAs: [
+      'https://facebook.com/caibh',
+      'https://instagram.com/caibh'
+    ]
+  })
+])
+</script>
+
 <template>
   <section class="mx-auto w-full max-w-6xl py-8">
     <!-- Botón Volver -->

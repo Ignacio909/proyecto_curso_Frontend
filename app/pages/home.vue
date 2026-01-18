@@ -3,6 +3,11 @@ definePageMeta({
   auth: true
 })
 
+useSeoMeta({
+  title: 'Inicio - Panel de Control',
+  description: 'Acceso rápido a tus citas, perfil y servicios médicos.',
+})
+
 const { data } = useAuth()
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase

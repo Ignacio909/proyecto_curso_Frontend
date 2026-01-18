@@ -2,6 +2,12 @@
 definePageMeta({ layout: 'default',
     auth: true }
 )
+
+useSeoMeta({
+  title: 'Mi Perfil - Proyecto Curso',
+  description: 'Gestiona tu información personal y seguridad de la cuenta.',
+})
+
 // TODO: Cuando implementen el login, este composable traerá los datos reales del usuario autenticado
 const { data, token } = useAuth()
 const isAdmin = computed(() => data.value?.rol === 'admin')
