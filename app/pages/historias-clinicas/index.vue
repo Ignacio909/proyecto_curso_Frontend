@@ -4,6 +4,11 @@ definePageMeta({
   auth: true
 })
 
+useSeoMeta({
+  title: 'Historias Clínicas - Especialista',
+  description: 'Consulta y gestión de expedientes médicos de pacientes.',
+})
+
 const { data: currentUser, token } = useAuth()
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase

@@ -6,6 +6,12 @@ definePageMeta({
 
 const { data: currentUser, token } = useAuth()
 const { addToast } = useToast()
+
+useSeoMeta({
+  title: 'Citas de Hoy - Especialista',
+  description: 'Revisa y gestiona tus pacientes programados para el día de hoy.',
+})
+
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 

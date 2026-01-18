@@ -1,4 +1,12 @@
 <script setup>
+  useSeoMeta({
+    title: 'Iniciar Sesión - Proyecto Curso',
+    description: 'Accede a tu cuenta para gestionar citas y servicios médicos.',
+    ogTitle: 'Iniciar Sesión - CAIBH',
+    ogDescription: 'Plataforma de gestión de salud integral.',
+    ogImage: '/logo WEB CAIBH.webp',
+  })
+
   definePageMeta({
     layout: 'minimal',
     auth: { unauthenticatedOnly: true, navigateAuthenticatedTo: '/home' }

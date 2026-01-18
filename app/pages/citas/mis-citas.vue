@@ -8,6 +8,11 @@ definePageMeta({
 // TODO: Cuando tengan autenticación, obtener el pacienteId del usuario autenticado
 const { data: currentUser, token } = useAuth()
 
+useSeoMeta({
+  title: 'Mis Citas - Historial',
+  description: 'Consulta tu historial de citas y próximos turnos.',
+})
+
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 

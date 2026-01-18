@@ -5,6 +5,11 @@
       auth: true
   })
 
+  useSeoMeta({
+    title: 'Nueva Historia Clínica - Especialista',
+    description: 'Formulario de creación de historia clínica para pacientes.',
+  })
+
   const { addToast } = useToast()
   const config = useRuntimeConfig()
   const route = useRoute() // <--- NECESARIO para leer la URL

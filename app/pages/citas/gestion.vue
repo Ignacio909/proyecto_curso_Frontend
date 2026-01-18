@@ -6,6 +6,12 @@ definePageMeta({
 
 const { data: currentUser, token } = useAuth()
 const { addToast } = useToast()
+
+useSeoMeta({
+  title: 'Gestión de Citas - Administración',
+  description: 'Panel administrativo para gestionar todas las citas del sistema.',
+})
+
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 

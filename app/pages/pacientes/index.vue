@@ -4,6 +4,11 @@ definePageMeta({
   auth: true
 })
 
+useSeoMeta({
+  title: 'Gestión de Pacientes - Administración',
+  description: 'Administra el registro de pacientes y sus datos personales.',
+})
+
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 const { data: currentUser, token } = useAuth()

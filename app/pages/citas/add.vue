@@ -6,6 +6,11 @@ definePageMeta({
 // TODO: Cuando tengan autenticación, obtener el pacienteId del usuario autenticado
 const { data: currentUser, token } = useAuth()
 
+useSeoMeta({
+  title: 'Agendar Nueva Cita - CAIBH',
+  description: 'Reserva tu cita médica con nuestros especialistas.',
+})
+
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 

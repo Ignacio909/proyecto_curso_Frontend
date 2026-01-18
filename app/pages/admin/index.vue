@@ -3,6 +3,11 @@ definePageMeta({
   layout: 'default',
   auth: true
 })
+
+useSeoMeta({
+  title: 'Panel de Administración - CAIBH',
+  description: 'Gestión centralizada de pacientes y especialistas.',
+})
 </script>
 
 <template>
