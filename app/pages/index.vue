@@ -84,10 +84,17 @@ const handleVerifyOTP = async () => {
           <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full"></div>
           
           <div class="inline-flex p-3 bg-white rounded-full shadow-lg mb-4 relative z-10">
-            <img src="/logo WEB CAIBH.webp" alt="Logo CAIBH" class="h-16 w-16 object-contain" />
+            <img 
+              src="/logo WEB CAIBH.webp" 
+              alt="Logo CAIBH" 
+              class="h-16 w-16 object-contain" 
+              width="64" 
+              height="64"
+              fetchpriority="high"
+            />
           </div>
           <h1 class="text-2xl font-extrabold text-white tracking-tight relative z-10">Bienvenido</h1>
-          <p class="text-blue-50 text-sm mt-2 opacity-90 relative z-10 font-medium">
+          <p class="text-blue-50 text-sm mt-2 relative z-10 font-medium">
             Accede al Sistema de Gestión Integral
           </p>
         </div>

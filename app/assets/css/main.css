@@ -5,9 +5,9 @@
 @import '@fontsource/nunito/700.css';
 
 @theme {
-  --color-primary: #4a90a4; /* celeste principal */
-  --color-green-1: #538d6a; /* verde apagado */
-  --color-green-2: #86b499; /* verde apagado claro */
+  --color-primary: #2d6a7f; /* celeste más oscuro para contraste AA */
+  --color-green-1: #3e6b50; /* verde más oscuro para contraste AA */
+  --color-green-2: #86b499; /* verde apagado claro (mantenido) */
 }
 
 body {
