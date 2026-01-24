@@ -1,9 +1,14 @@
 {
   // https://nuxt.com/docs/guide/concepts/typescript
   "compilerOptions": {
-    "types": ["node"]
+    "types": [
+      "node",
+      "vitest/globals"
+    ]
   },
-  "files": [],
+  "include": [
+    "tests/**/*"
+  ],
   "references": [
     {
       "path": "./.nuxt/tsconfig.app.json"

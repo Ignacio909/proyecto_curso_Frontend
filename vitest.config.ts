@@ -1,13 +1,11 @@
-import { defineVitestConfig} from '@nuxt/test-utils/config'
-import test from 'node:test'
+import { defineVitestConfig } from '@nuxt/test-utils/config'
 
 export default defineVitestConfig({
     test: {
-        enviroment: 'nuxt',
-
-        enviromentOption: {
+        environment: 'nuxt',
+        environmentOptions: {
             nuxt: {
-                domEnviroment: 'happy-dom'
+                domEnvironment: 'happy-dom'
             }
         },
         globals: true
