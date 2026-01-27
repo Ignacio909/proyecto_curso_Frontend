@@ -23,8 +23,17 @@ export default defineNuxtConfig({
 
   modules: [
     '@sidebase/nuxt-auth',
-    '@nuxtjs/seo'
+    '@nuxtjs/seo',
+    '@nuxtjs/google-fonts'
   ],
+  googleFonts: {
+    families: {
+      Nunito: [400, 600, 700], // Las versiones que ya usas
+    },
+    display: 'swap',  // Evita que el texto desaparezca mientras carga la fuente
+    download: true,   // Descarga las fuentes localmente (mejor para privacidad y SEO)
+    inject: true      // Inyecta el CSS automáticamente
+  },
 
   site: {
     url: 'https://tu-dominio.com', // REEMPLAZAR con tu dominio real cuando lo tengas

@@ -19,7 +19,7 @@ const props = defineProps({
   variant: {
     type: String,
     default: 'green-1',
-    validator: (value) => ['primary', 'green-1', 'green-2'].includes(value)
+    validator: (value) => ['primary', 'green-1', 'green-2', 'red', 'ghost'].includes(value)
   },
   // Tamaño: 'sm', 'md', 'lg'
   size: {
@@ -56,7 +56,9 @@ const handleClick = () => {
 const variantClasses = {
   'primary': 'bg-primary hover:bg-primary/90',
   'green-1': 'bg-green-1 hover:bg-green-2',
-  'green-2': 'bg-green-2 hover:bg-green-1'
+  'green-2': 'bg-green-2 hover:bg-green-1',
+  'red': 'bg-red-700 hover:bg-red-800 text-white', 
+  'ghost': 'bg-transparent hover:bg-gray-100 text-gray-600'
 }
 
 const sizeClasses = {

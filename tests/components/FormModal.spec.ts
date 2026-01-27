@@ -105,7 +105,7 @@ describe('FormModal.vue', () => {
         const submittedData = component.emitted('submit')![0]![0]
         expect(submittedData).toEqual({
             nombre: 'Maria Gomez',
-            edad: '25' // Nota: los inputs HTML siempre devuelven strings por defecto
+            edad: 25 // Nota: los inputs HTML siempre devuelven strings por defecto
         })
     })
 

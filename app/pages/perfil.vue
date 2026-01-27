@@ -103,10 +103,17 @@ const confirm2FA = async () => {
     addToast('Código incorrecto', 'error')
   }
 }
+  
+const showDisableModal = ref(false)
 
-const disable2FA = async () => {
-  if (!confirm('¿Estás seguro de que quieres desactivar la autenticación de dos factores? Tu cuenta será menos segura.')) return
+  // 1. Esta función solo abre el modal (reemplaza a la que tenías antes en el botón)
+const requestDisable2FA = () => {
+    showDisableModal.value = true
+}
 
+const confirmDisable2FA = async () => {
+  showDisableModal.value = false // Cerramos modal
+  
   try {
     await $fetch(`${apiBase}/autenticacionRoutes/2fa/disable`, {
       method: 'POST',
@@ -115,6 +122,7 @@ const disable2FA = async () => {
     addToast('2FA desactivado correctamente', 'success')
     is2FAEnabled.value = false
     tfaStep.value = 'initial'
+    // Recarga suave
     setTimeout(() => window.location.reload(), 1000)
   } catch (e) {
     addToast('Error al desactivar 2FA', 'error')
@@ -263,7 +271,7 @@ const handleSave = async () => {
               </svg>
               2FA Activado
             </div>
-            <Button label="Desactivar 2FA" @click="disable2FA" variant="red" size="sm" class="w-full opacity-80 hover:opacity-100" />
+            <Button label="Desactivar 2FA" @click="requestDisable2FA" variant="red" size="sm" class="w-full opacity-80 hover:opacity-100" />
           </div>
         </div>
       </div>
@@ -277,31 +285,34 @@ const handleSave = async () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- Nombre -->
               <div class="space-y-2">
-                <label class="text-sm font-semibold text-gray-700">Nombre de Usuario</label>
+                <label for="usuario" class="text-sm font-semibold text-gray-700">Nombre de Usuario</label>
                 <input 
+                  id="usuario"
                   v-model="formData.usuario"
                   type="text" 
                   required
-                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                  class="w-full px-4 py-3 rounded-lg border ..."
                 />
               </div>
 
               <!-- Correo -->
               <div class="space-y-2">
-                <label class="text-sm font-semibold text-gray-700">Correo Electrónico</label>
+                <label for="correo" class="text-sm font-semibold text-gray-700">Correo Electrónico</label>
                 <input 
+                  id="correo"
                   v-model="formData.correo"
                   type="email" 
                   required
-                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                  class="w-full px-4 py-3 rounded-lg border ..."
                 />
               </div>
 
               <!-- Campos Paciente -->
               <template v-if="isPaciente">
                 <div class="space-y-2">
-                  <label class="text-sm font-semibold text-gray-700">Teléfono</label>
+                  <label for="telefono" class="text-sm font-semibold text-gray-700">Teléfono</label>
                   <input 
+                    id="telefono"
                     v-model="formData.telefono"
                     type="tel" 
                     required
@@ -309,8 +320,9 @@ const handleSave = async () => {
                   />
                 </div>
                 <div class="space-y-2">
-                  <label class="text-sm font-semibold text-gray-700">Carnet de Identidad</label>
+                  <label for="ci" class="text-sm font-semibold text-gray-700">Carnet de Identidad</label>
                   <input 
+                    id="ci"
                     v-model="formData.carnetIdentidad"
                     type="text" 
                     required
@@ -321,9 +333,10 @@ const handleSave = async () => {
 
               <!-- Campos Especialista -->
               <template v-if="isEspecialista">
-                <div class="md:col-span-2 space-y-2">
+                <div for="especialidad" class="md:col-span-2 space-y-2">
                   <label class="text-sm font-semibold text-gray-700">Especialidad</label>
                   <input 
+                    id="especialidad"
                     v-model="formData.especialidad"
                     type="text" 
                     required
@@ -337,8 +350,9 @@ const handleSave = async () => {
               <h4 class="text-lg font-semibold text-gray-800 mb-4">Cambiar Contraseña</h4>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
-                  <label class="text-sm font-semibold text-gray-700">Contraseña Actual</label>
+                  <label for="contrasenaAnterior"class="text-sm font-semibold text-gray-700">Contraseña Actual</label>
                   <input 
+                    id="contrasenaAnterior"
                     v-model="formData.contrasenaAnterior"
                     type="password" 
                     placeholder="••••••••"
@@ -346,8 +360,9 @@ const handleSave = async () => {
                   />
                 </div>
                 <div class="space-y-2">
-                  <label class="text-sm font-semibold text-gray-700">Nueva Contraseña</label>
+                  <label for="contrasenaNueva" class="text-sm font-semibold text-gray-700">Nueva Contraseña</label>
                   <input 
+                    id="contrasenaNueva"
                     v-model="formData.contrasenaNueva"
                     type="password" 
                     placeholder="••••••••"
@@ -367,6 +382,40 @@ const handleSave = async () => {
               />
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+    <div 
+      v-if="showDisableModal" 
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in"
+      role="dialog"
+      aria-labelledby="modal-title"
+      aria-modal="true"
+    >
+      <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
+        <h2 id="modal-title" class="text-2xl font-bold mb-4 text-red-700">Desactivar Seguridad</h2>
+        
+        <p class="text-lg mb-4 text-gray-800">
+          ¿Estás seguro de que quieres desactivar la autenticación de dos factores?
+        </p>
+        
+        <p class="text-sm text-gray-600 mb-6 bg-yellow-50 p-3 rounded border border-yellow-200">
+          ⚠️ Tu cuenta será menos segura y solo dependerá de tu contraseña para acceder.
+        </p>
+  
+        <div class="flex gap-4 justify-end">
+          <button
+            @click="showDisableModal = false"
+            class="rounded-md bg-gray-200 px-6 py-2 text-gray-700 font-medium hover:bg-gray-300 transition"
+          >
+            Cancelar
+          </button>
+          <button
+            @click="confirmDisable2FA"
+            class="rounded-md bg-red-600 px-6 py-2 text-white font-medium hover:bg-red-700 transition shadow-lg"
+          >
+            Sí, Desactivar
+          </button>
         </div>
       </div>
     </div>
