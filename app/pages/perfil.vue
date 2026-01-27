@@ -1,57 +1,48 @@
 <script setup>
-definePageMeta({ layout: 'default',
-    auth: true }
-)
-
-useSeoMeta({
-  title: 'Mi Perfil - Proyecto Curso',
-  description: 'Gestiona tu información personal y seguridad de la cuenta.',
+definePageMeta({
+  layout: 'default',
+  auth: true
 })
 
-// TODO: Cuando implementen el login, este composable traerá los datos reales del usuario autenticado
-const { data, token } = useAuth()
+useSeoMeta({
+  title: 'Mi Perfil - CAIBH',
+  description: 'Gestiona tu información personal, contraseña y seguridad de la cuenta.',
+})
+
+const { data, token, signOut } = useAuth()
+const { addToast } = useToast()
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase
+
+// Roles
 const isAdmin = computed(() => data.value?.rol === 'admin')
 const isPaciente = computed(() => data.value?.rol === 'paciente')
 const isEspecialista = computed(() => data.value?.rol === 'especialista')
 
-// Formulario reactivo
+// Ruta de retorno
+const backRoute = computed(() => isAdmin.value ? '/admin' : '/home')
+
+// Formulario
 const formData = ref({
   usuario: data.value?.usuario || '',
   correo: data.value?.correo || '',
   contrasenaAnterior: '',
   contrasenaNueva: '',
-  // Campos específicos por rol
   telefono: data.value?.paciente?.telefono || '',
   carnetIdentidad: data.value?.paciente?.carnetIdentidad || '',
   especialidad: data.value?.especialista?.especialidad || ''
 })
 
-
-
-
-const config = useRuntimeConfig()
-const apiBase = config.public.apiBase
-const { addToast } = useToast()
-
-// Determinar qué ruta de retorno según el rol
-const backRoute = computed(() => {
-  if (isAdmin.value) return '/admin'
-  return '/home'
-})
-
-// Manejo de imagen
+// Imagen
 const selectedImage = ref(null)
 const imagePreview = ref(null)
 const fileInputRef = ref(null)
 
-// URL final para mostrar la imagen (preview o la del backend)
 const displayImage = computed(() => {
   if (imagePreview.value) return imagePreview.value
   const img = data.value?.imagen
   if (!img) return null
-  // Si ya viene absoluta, úsala; si es relativa, prefijar apiBase
   if (/^https?:\/\//i.test(img)) return img
-  // Normalizar si viene guardada como 'public/...'
   const normalized = img.startsWith('public/') ? img.replace(/^public\//, '') : img
   return `${apiBase}${normalized.startsWith('/') ? '' : '/'}${normalized}`
 })
@@ -60,36 +51,40 @@ const handleImageSelect = (event) => {
   const file = event.target.files[0]
   if (file) {
     selectedImage.value = file
-    // Crear preview
     const reader = new FileReader()
-    reader.onload = (e) => {
-      imagePreview.value = e.target.result
-    }
+    reader.onload = (e) => imagePreview.value = e.target.result
     reader.readAsDataURL(file)
   }
 }
 
-const triggerImageUpload = () => {
-  fileInputRef.value?.click()
-}
+const triggerImageUpload = () => fileInputRef.value?.click()
 
-// --- LÓGICA PARA 2FA ---
-const qrCodeUrl = ref(null);
-const tfaStep = ref(data.value?.twoFactorEnabled ? 'active' : 'initial');
-const tfaToken = ref('');
+// 2FA Logic
+const qrCodeUrl = ref(null)
+const tfaStep = ref('initial') // initial, scanning, active
+const tfaToken = ref('')
+const is2FAEnabled = ref(false)
+
+// Inicializar estado 2FA
+onMounted(() => {
+  if (data.value?.twoFactorEnabled) {
+    is2FAEnabled.value = true
+    tfaStep.value = 'active'
+  }
+})
 
 const setup2FA = async () => {
   try {
     const response = await $fetch(`${apiBase}/autenticacionRoutes/2fa/generate`, {
       method: 'POST',
       headers: { Authorization: token.value }
-    });
-    qrCodeUrl.value = response.qrCodeUrl;
-    tfaStep.value = 'scanning';
+    })
+    qrCodeUrl.value = response.qrCodeUrl
+    tfaStep.value = 'scanning'
   } catch (e) {
-    addToast({ title: 'Error', description: 'No se pudo generar el QR', type: 'error' });
+    addToast('Error al generar QR', 'error')
   }
-};
+}
 
 const confirm2FA = async () => {
   try {
@@ -97,42 +92,57 @@ const confirm2FA = async () => {
       method: 'POST',
       body: { token: tfaToken.value },
       headers: { Authorization: token.value }
-    });
-    addToast({ title: 'Éxito', description: '2FA activado correctamente', type: 'success' });
-    tfaStep.value = 'active';
+    })
+    addToast('2FA activado correctamente', 'success')
+    is2FAEnabled.value = true
+    tfaStep.value = 'active'
+    tfaToken.value = ''
+    // Actualizar sesión localmente si es posible o forzar recarga
+    setTimeout(() => window.location.reload(), 1000)
   } catch (e) {
-    addToast({ title: 'Error', description: 'Código incorrecto o expirado', type: 'error' });
+    addToast('Código incorrecto', 'error')
   }
-};
+}
+
+const disable2FA = async () => {
+  if (!confirm('¿Estás seguro de que quieres desactivar la autenticación de dos factores? Tu cuenta será menos segura.')) return
+
+  try {
+    await $fetch(`${apiBase}/autenticacionRoutes/2fa/disable`, {
+      method: 'POST',
+      headers: { Authorization: token.value }
+    })
+    addToast('2FA desactivado correctamente', 'success')
+    is2FAEnabled.value = false
+    tfaStep.value = 'initial'
+    setTimeout(() => window.location.reload(), 1000)
+  } catch (e) {
+    addToast('Error al desactivar 2FA', 'error')
+  }
+}
+
+// Guardar Perfil
 const handleSave = async () => {
   try {
-    // Obtener el ID correcto según el rol
     let userId = null
-    if (isPaciente.value) {
-      userId = data.value?.paciente?.id
-    } else if (isEspecialista.value) {
-      userId = data.value?.especialista?.id
-    } else {
-      userId = data.value?.id // Fallback para admin u otros
-    }
+    if (isPaciente.value) userId = data.value?.paciente?.id
+    else if (isEspecialista.value) userId = data.value?.especialista?.id
+    else userId = data.value?.id
 
     if (!userId) {
-      addToast('Error: No se pudo obtener el ID del perfil', 'error')
+      addToast('Error de identificación de usuario', 'error')
       return
     }
 
-    // Crear FormData para soportar archivos
     const uploadData = new FormData()
     uploadData.append('usuario', formData.value.usuario)
     uploadData.append('correo', formData.value.correo)
 
-    // Agregar contraseñas solo si se proporcionaron ambas
     if (formData.value.contrasenaAnterior && formData.value.contrasenaNueva) {
       uploadData.append('contrasenaAnterior', formData.value.contrasenaAnterior)
       uploadData.append('contrasena', formData.value.contrasenaNueva)
     }
 
-    // Agregar campos específicos por rol
     if (isPaciente.value) {
       uploadData.append('telefono', formData.value.telefono)
       uploadData.append('carnetIdentidad', formData.value.carnetIdentidad)
@@ -140,231 +150,236 @@ const handleSave = async () => {
       uploadData.append('especialidad', formData.value.especialidad)
     }
 
-    // Agregar imagen si se seleccionó
     if (selectedImage.value) {
       uploadData.append('imagen', selectedImage.value)
     }
 
-    // Determinar endpoint según rol
     let endpoint = ''
-    if (isPaciente.value) {
-      endpoint = `${apiBase}/pacientes/${userId}`
-    } else if (isEspecialista.value) {
-      endpoint = `${apiBase}/especialistas/${userId}`
-    } else {
-      addToast('Actualización de perfil no implementada para este rol', 'error')
+    if (isPaciente.value) endpoint = `${apiBase}/pacientes/${userId}`
+    else if (isEspecialista.value) endpoint = `${apiBase}/especialistas/${userId}`
+    else {
+      addToast('Rol no soportado para edición completa', 'warning')
       return
     }
 
     await $fetch(endpoint, {
       method: 'PUT',
-      headers: {
-        Authorization: token.value
-      },
+      headers: { Authorization: token.value },
       body: uploadData
     })
 
     addToast('Perfil actualizado exitosamente')
-    
-    // Limpiar imagen seleccionada
     selectedImage.value = null
     imagePreview.value = null
-    
-    // Recargar sesión para obtener datos actualizados
-    setTimeout(() => {
-      window.location.reload()
-    }, 1500)
+    setTimeout(() => window.location.reload(), 1500)
   } catch (err) {
-    console.error('Error al actualizar perfil:', err)
+    console.error(err)
     addToast('Error al actualizar perfil', 'error')
   }
 }
 </script>
 
 <template>
-  <section class="mx-auto w-full max-w-5xl">
-    <!-- Botón Volver -->
-    <div class="mb-4">
+  <section class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
       <Button 
-        label="Volver" 
-        variant="green-2"
+        label="← Volver" 
+        variant="ghost" 
         :to="backRoute"
-        size="sm"
+        class="!text-gray-600 hover:!text-primary hover:!bg-gray-100"
       />
+      <h1 class="text-3xl font-bold text-gray-800">Configuración de Cuenta</h1>
+      <div class="w-24"></div> <!-- Spacer for centering -->
     </div>
 
-    <!-- Título dinámico según rol -->
-    <h1 class="text-3xl font-bold text-primary text-center mb-6">
-      Mi Perfil 
-      <span v-if="isAdmin" class="text-2xl">(Administrador)</span>
-      <span v-else-if="isPaciente" class="text-2xl">(Paciente)</span>
-      <span v-else-if="isEspecialista" class="text-2xl">(Especialista)</span>
-    </h1>
-
-
-
-
-
-    <div class="flex flex-col items-center gap-3 py-6">
-      <!-- Hidden file input -->
-      <input 
-        ref="fileInputRef"
-        type="file" 
-        accept="image/*" 
-        @change="handleImageSelect"
-        class="hidden"
-      />
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       
-      <!-- Image preview or current image -->
-      <div class="h-28 w-28 rounded-full bg-primary/20 ring-4 ring-primary/30 overflow-hidden">
-        <img
-          v-if="displayImage"
-          :src="displayImage"
-          alt="Perfil"
-          class="h-full w-full object-cover"
-        />
-      </div>
-      
-      <Button 
-        label="Cambiar Imagen" 
-        variant="green-2"
-        size="sm"
-        :onClick="triggerImageUpload"
-      />
-      <p v-if="selectedImage" class="text-sm text-green-600">
-        Imagen seleccionada: {{ selectedImage.name }}
-      </p>
-    </div>
-
-    <div class="rounded-md border border-black/50 p-6">
-      <form @submit.prevent="handleSave" class="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <!-- Campos comunes para todos -->
-        <div>
-          <label class="mb-2 block text-xl">Nombre Usuario:</label>
-          <input 
-            v-model="formData.usuario"
-            type="text" 
-            required
-            class="w-full rounded-md border-2 border-black px-4 py-3 focus:outline-none focus:border-primary" 
-          />
-        </div>
-        
-        <div>
-          <label class="mb-2 block text-xl">Correo:</label>
-          <input 
-            v-model="formData.correo"
-            type="email" 
-            required
-            class="w-full rounded-md border-2 border-black px-4 py-3 focus:outline-none focus:border-primary" 
-          />
-        </div>
-
-        <div>
-          <label class="mb-2 block text-xl">Contraseña Anterior:</label>
-          <input 
-            v-model="formData.contrasenaAnterior"
-            type="password" 
-            placeholder="Dejar vacío para no cambiar"
-            class="w-full rounded-md border-2 border-black px-4 py-3 focus:outline-none focus:border-primary" 
-          />
-        </div>
-        
-        <div>
-          <label class="mb-2 block text-xl">Contraseña Nueva:</label>
-          <input 
-            v-model="formData.contrasenaNueva"
-            type="password" 
-            placeholder="Dejar vacío para no cambiar"
-            class="w-full rounded-md border-2 border-black px-4 py-3 focus:outline-none focus:border-primary" 
-          />
-        </div>
-
-        <!-- Campos específicos para PACIENTE -->
-        <template v-if="isPaciente">
-          <div>
-            <label class="mb-2 block text-xl">Teléfono:</label>
-            <input 
-              v-model="formData.telefono"
-              type="tel" 
-              required
-              class="w-full rounded-md border-2 border-black px-4 py-3 focus:outline-none focus:border-primary" 
-            />
-          </div>
-          
-          <div>
-            <label class="mb-2 block text-xl">Carnet de Identidad:</label>
-            <input 
-              v-model="formData.carnetIdentidad"
-              type="text" 
-              required
-              class="w-full rounded-md border-2 border-black px-4 py-3 focus:outline-none focus:border-primary" 
-            />
-          </div>
-        </template>
-
-        <!-- Campos específicos para ESPECIALISTA -->
-        <template v-if="isEspecialista">
-          <div class="md:col-span-2">
-            <label class="mb-2 block text-xl">Especialidad:</label>
-            <input 
-              v-model="formData.especialidad"
-              type="text" 
-              required
-              class="w-full rounded-md border-2 border-black px-4 py-3 focus:outline-none focus:border-primary" 
-            />
-          </div>
-        </template>
-
-        <!-- Admin no tiene campos adicionales -->
-
-        <div class="md:col-span-2 flex justify-center pt-2">
-          <Button 
-            label="Guardar Cambios" 
-            variant="green-1"
-            size="lg"
-            type="submit"
-          />
-        </div>
-      </form>
-      
-      <div class="mt-10 pt-8 border-t-2 border-gray-100">
-          <h3 class="text-2xl font-bold mb-4 text-primary flex items-center gap-2">
-            <span class="text-2xl">🔒</span> Seguridad de la Cuenta
-          </h3>
-          
-          <div v-if="tfaStep === 'initial'" class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
-            <p class="mb-4 text-gray-700 font-medium">Protege tu cuenta con un segundo factor de autenticación (TOTP).</p>
-            <Button label="Configurar 2FA ahora" @click="setup2FA" variant="primary" />
-          </div>
-
-          <div v-if="tfaStep === 'scanning'" class="flex flex-col items-center bg-gray-50 p-8 rounded-2xl border-2 border-dashed border-gray-200">
-            <p class="mb-6 text-center text-gray-600">
-              1. Escanea este código con <b>Google Authenticator</b> o <b>Authy</b>.<br>
-              2. Introduce el código de 6 dígitos que aparece en tu app.
-            </p>
-            <img :src="qrCodeUrl" alt="QR Code" class="mb-6 border-4 border-white shadow-xl rounded-xl w-48 h-48" />
-            
-            <div class="w-full max-w-xs space-y-4">
-              <input 
-                v-model="tfaToken" 
-                type="text"
-                placeholder="000 000"
-                maxlength="6"
-                class="w-full text-center text-2xl tracking-[0.5em] font-bold rounded-md border-2 border-black px-4 py-3 focus:outline-none focus:border-primary" 
+      <!-- Columna Izquierda: Tarjeta de Perfil -->
+      <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center border border-gray-100">
+          <div class="relative group cursor-pointer" @click="triggerImageUpload">
+            <div class="h-40 w-40 rounded-full ring-4 ring-primary/20 overflow-hidden shadow-md transition-transform group-hover:scale-105">
+              <img
+                v-if="displayImage"
+                :src="displayImage"
+                alt="Perfil"
+                class="h-full w-full object-cover"
               />
-              <Button label="Verificar y Activar" @click="confirm2FA" class="w-full" />
-              <button @click="tfaStep = 'initial'" class="text-sm text-gray-500 underline w-full text-center">Cancelar</button>
+              <div v-else class="h-full w-full bg-gray-100 flex items-center justify-center text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              
+              <!-- Overlay de cambio -->
+              <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="text-white font-medium text-sm">Cambiar Foto</span>
+              </div>
             </div>
+            <input ref="fileInputRef" type="file" accept="image/*" @change="handleImageSelect" class="hidden" />
           </div>
 
-          <div v-if="tfaStep === 'active'" class="bg-green-50 p-6 rounded-2xl border border-green-200 flex items-center gap-4">
-            <div class="bg-green-500 text-white rounded-full p-2">✓</div>
-            <div>
-              <p class="font-bold text-green-800">El Segundo Factor (2FA) está activo</p>
-              <p class="text-green-600 text-sm">Tu cuenta está protegida por códigos temporales.</p>
-            </div>
+          <h2 class="mt-4 text-2xl font-bold text-gray-800">{{ formData.usuario }}</h2>
+          <p class="text-primary font-medium capitalize">{{ data?.rol }}</p>
+          
+          <div v-if="selectedImage" class="mt-4 w-full">
+            <p class="text-xs text-center text-green-600 mb-2">Nueva imagen seleccionada</p>
           </div>
         </div>
+
+        <!-- Tarjeta de Seguridad (2FA) -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+          <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <span class="text-2xl">🛡️</span> Seguridad
+          </h3>
+
+          <!-- Estado Inicial (Sin 2FA) -->
+          <div v-if="!is2FAEnabled && tfaStep === 'initial'" class="text-center">
+            <p class="text-gray-600 mb-6 text-sm">Protege tu cuenta añadiendo una capa extra de seguridad.</p>
+            <Button label="Activar 2FA" @click="setup2FA" variant="primary" class="w-full" />
+          </div>
+
+          <!-- Escaneo QR -->
+          <div v-if="tfaStep === 'scanning'" class="flex flex-col items-center animate-fade-in">
+            <p class="text-sm text-gray-600 mb-4 text-center">Escanea con Google Authenticator</p>
+            <img :src="qrCodeUrl" alt="QR" class="w-40 h-40 rounded-lg border-2 border-gray-200 mb-4" />
+            <input 
+              v-model="tfaToken" 
+              type="text" 
+              placeholder="000 000" 
+              maxlength="6"
+              class="w-full text-center text-xl tracking-widest font-bold border-2 border-gray-200 rounded-lg py-2 focus:border-primary focus:outline-none mb-3"
+            />
+            <Button label="Verificar" @click="confirm2FA" variant="green-1" class="w-full mb-2" />
+            <button @click="tfaStep = 'initial'" class="text-xs text-gray-500 hover:underline">Cancelar</button>
+          </div>
+
+          <!-- Activo -->
+          <div v-if="is2FAEnabled" class="text-center animate-fade-in">
+            <div class="bg-green-50 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm font-medium flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              2FA Activado
+            </div>
+            <Button label="Desactivar 2FA" @click="disable2FA" variant="red" size="sm" class="w-full opacity-80 hover:opacity-100" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna Derecha: Formulario de Datos -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 h-full">
+          <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-4">Información Personal</h3>
+          
+          <form @submit.prevent="handleSave" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Nombre -->
+              <div class="space-y-2">
+                <label class="text-sm font-semibold text-gray-700">Nombre de Usuario</label>
+                <input 
+                  v-model="formData.usuario"
+                  type="text" 
+                  required
+                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                />
+              </div>
+
+              <!-- Correo -->
+              <div class="space-y-2">
+                <label class="text-sm font-semibold text-gray-700">Correo Electrónico</label>
+                <input 
+                  v-model="formData.correo"
+                  type="email" 
+                  required
+                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                />
+              </div>
+
+              <!-- Campos Paciente -->
+              <template v-if="isPaciente">
+                <div class="space-y-2">
+                  <label class="text-sm font-semibold text-gray-700">Teléfono</label>
+                  <input 
+                    v-model="formData.telefono"
+                    type="tel" 
+                    required
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-semibold text-gray-700">Carnet de Identidad</label>
+                  <input 
+                    v-model="formData.carnetIdentidad"
+                    type="text" 
+                    required
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                  />
+                </div>
+              </template>
+
+              <!-- Campos Especialista -->
+              <template v-if="isEspecialista">
+                <div class="md:col-span-2 space-y-2">
+                  <label class="text-sm font-semibold text-gray-700">Especialidad</label>
+                  <input 
+                    v-model="formData.especialidad"
+                    type="text" 
+                    required
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                  />
+                </div>
+              </template>
+            </div>
+
+            <div class="pt-6 mt-6 border-t border-gray-100">
+              <h4 class="text-lg font-semibold text-gray-800 mb-4">Cambiar Contraseña</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                  <label class="text-sm font-semibold text-gray-700">Contraseña Actual</label>
+                  <input 
+                    v-model="formData.contrasenaAnterior"
+                    type="password" 
+                    placeholder="••••••••"
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-semibold text-gray-700">Nueva Contraseña</label>
+                  <input 
+                    v-model="formData.contrasenaNueva"
+                    type="password" 
+                    placeholder="••••••••"
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-6">
+              <Button 
+                label="Guardar Cambios" 
+                variant="green-1" 
+                size="lg" 
+                type="submit"
+                class="px-8 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
+              />
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </section>
 </template>
+
+<style scoped>
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
