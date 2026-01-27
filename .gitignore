@@ -29,3 +29,5 @@ logs
 .env
 .env.*
 !.env.example
+test-results/.last-run.json
+GUIA_E2E.md
