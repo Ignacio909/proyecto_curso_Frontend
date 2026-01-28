@@ -243,10 +243,11 @@ const saveAdd = async (formData) => {
 
     <DeleteConfirmModal
       :isOpen="showDeleteModal"
-      :specialist="selectedSpecialist"
       itemType="al especialista"
-      @close="showDeleteModal = false"
+      :itemName="selectedSpecialist?.persona?.usuario" 
+      :item="selectedSpecialist"
       @confirm="confirmDelete"
-    />
+      @close="showDeleteModal = false"  
+  />
   </section>
 </template>

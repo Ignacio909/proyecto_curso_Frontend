@@ -59,7 +59,7 @@ const onSignOut = async () => {
         <ul v-else-if="role === 'admin'" class="flex items-center gap-8 text-lg whitespace-nowrap">
           <li><NuxtLink to="/pacientes" class="hover:text-black transition-colors">Pacientes</NuxtLink></li>
           <li><NuxtLink to="/especialistas" class="hover:text-black transition-colors">Especialistas</NuxtLink></li>
-          <li><NuxtLink to="/citas/gestion" class="hover:text-black transition-colors">Citas</NuxtLink></li>
+          <li><NuxtLink to="/citas" class="hover:text-black transition-colors">Citas</NuxtLink></li>
           <li><NuxtLink to="/perfil" class="hover:text-black transition-colors">Mi Perfil</NuxtLink></li>
         </ul>
       </div>

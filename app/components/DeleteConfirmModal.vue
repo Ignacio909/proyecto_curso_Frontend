@@ -1,7 +1,8 @@
 <script setup>
 // Modal genérico para confirmar eliminación
 const props = defineProps({
-  specialist: {
+  // El objeto completo que se quiere eliminar
+  item: {
     type: Object,
     default: null
   },
@@ -9,26 +10,27 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  // Ej: 'el paciente', 'la cita', 'el registro'
   itemType: {
     type: String,
-    default: 'registro'
+    default: 'este elemento'
+  },
+  // El nombre específico que aparecerá en negrita (ej: "Juan Perez")
+  itemName: {
+    type: String,
+    default: ''
   }
 })
 
 const emit = defineEmits(['close', 'confirm'])
 
 const handleConfirm = () => {
-  emit('confirm', props.specialist)
+  emit('confirm', props.item)
 }
 
 const handleClose = () => {
   emit('close')
 }
-
-// Obtener nombre para mostrar
-const displayName = computed(() => {
-  return props.specialist?.persona?.usuario || props.specialist?.usuario || 'este registro'
-})
 </script>
 
 <template>
@@ -42,7 +44,7 @@ const displayName = computed(() => {
       
       <p class="text-lg mb-6">
         ¿Está seguro que desea eliminar {{ itemType }} 
-        <strong>{{ displayName }}</strong>?
+        <strong v-if="itemName">{{ itemName }}</strong>?
       </p>
       
       <p class="text-sm text-gray-600 mb-6">
@@ -51,16 +53,18 @@ const displayName = computed(() => {
 
       <div class="flex gap-4 justify-end">
         <button
+          type="button"
           @click="handleClose"
           class="rounded-md bg-gray-400 px-6 py-2 text-white hover:bg-gray-500 transition"
         >
           Cancelar
         </button>
         <button
+          type="button"
           @click="handleConfirm"
-          class="rounded-md bg-red-600 px-6 py-2 text-white hover:bg-red-700 transition"
+          class="rounded-md bg-red-600 px-6 py-2 text-white hover:bg-red-700 transition font-bold"
         >
-          Eliminar
+          Sí, Eliminar
         </button>
       </div>
     </div>
