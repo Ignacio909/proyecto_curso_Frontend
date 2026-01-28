@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Login Flow', () => {
+    // NOTE: These tests require a test user to exist in the database:
+    // Email: paciente@ejemplo.com
+    // Password: password123
+    // This user should NOT have 2FA enabled for the success test to work correctly.
 
     test('should login successfully with valid credentials', async ({ page }) => {
         // 1. Navegar a la página de login
@@ -8,8 +12,8 @@ test.describe('Login Flow', () => {
 
         // 2. Llenar el formulario
         // Usamos selectores robustos (placeholder en este caso, o name si existiera)
-        await page.fill('input[type="email"]', 'paciente@ejemplo.com');
-        await page.fill('input[type="password"]', 'password123');
+        await page.fill('input[type="email"]', 'daniel@gmail.com');
+        await page.fill('input[type="password"]', 'daniel.03');
 
         // 3. Hacer clic en el botón de login
         await page.click('button[type="submit"]');
@@ -27,13 +31,21 @@ test.describe('Login Flow', () => {
 
         await page.fill('input[type="email"]', 'wrong@email.com');
         await page.fill('input[type="password"]', 'wrongpass');
+
+        // Wait for the API request to complete (regardless of success/failure)
+        const responsePromise = page.waitForResponse(response =>
+            response.url().includes('/autenticacionRoutes/login')
+        );
+
         await page.click('button[type="submit"]');
 
-        // Verificar que aparece el toast de error
-        // Nota: Esto depende de cómo se renderiza el toast en tu app. 
-        // Si usas una librería, busca el selector adecuado.
-        // Aquí asumimos que aparece un texto "Error" o "Credenciales inválidas"
-        await expect(page.locator('body')).toContainText('Error');
+        // Wait for the error response
+        await responsePromise;
+
+        // Wait for the toast to appear and verify it contains error styling
+        // ToastContainer renders error toasts with bg-red-600 class
+        const errorToast = page.locator('.bg-red-600');
+        await expect(errorToast).toBeVisible({ timeout: 5000 });
     });
 
 });
