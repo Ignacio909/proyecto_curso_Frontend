@@ -82,7 +82,20 @@
   </script>
   
   <template>
+    
     <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+
+      <Button 
+      label="Volver al inicio" 
+      to="/" 
+      variant="green-1" 
+      position="top-left"
+    >
+      <template #icon>
+        <span aria-hidden="true">←</span>
+      </template>
+    </Button>
+
       <div class="max-w-2xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden">
         
         <div class="bg-primary p-6 text-center">
@@ -94,17 +107,18 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             <div class="space-y-2">
-              <label class="text-xs font-bold text-gray-700 uppercase">Usuario</label>
-              <input v-model="form.usuario" required type="text" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl outline-none focus:border-primary transition-all" />
+              <label for="usuario" class="text-xs font-bold text-gray-700 uppercase">Usuario</label>
+              <input id="usuario" v-model="form.usuario" required type="text" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl outline-none focus:border-primary transition-all" />
             </div>
   
             <div class="space-y-2">
-              <label class="text-xs font-bold text-gray-700 uppercase">Teléfono (+53)</label>
+              <label for="telefono" class="text-xs font-bold text-gray-700 uppercase">Teléfono (+53)</label>
               <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500 font-bold border-r-2 border-gray-200 pr-2">
+                <span aria-hidden="true" class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500 font-bold border-r-2 border-gray-200 pr-2">
                   +53
                 </span>
                 <input 
+                  id="telefono"
                   v-model="form.telefono" 
                   required 
                   type="tel" 
@@ -116,8 +130,9 @@
             </div>
   
             <div class="space-y-2">
-              <label class="text-xs font-bold text-gray-700 uppercase">Cédula (11 dígitos)</label>
+              <label for="ci" class="text-xs font-bold text-gray-700 uppercase">Cédula (11 dígitos)</label>
               <input 
+                id="ci"
                 v-model="form.carnetIdentidad" 
                 required 
                 type="text" 
@@ -128,14 +143,15 @@
             </div>
   
             <div class="space-y-2">
-              <label class="text-xs font-bold text-gray-700 uppercase">Correo</label>
-              <input v-model="form.correo" required type="email" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl outline-none focus:border-primary transition-all" />
+              <label for="correo" class="text-xs font-bold text-gray-700 uppercase">Correo</label>
+              <input id="correo" v-model="form.correo" required type="email" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl outline-none focus:border-primary transition-all" />
             </div>
   
             <div class="md:col-span-2 space-y-2">
-              <label class="text-xs font-bold text-gray-700 uppercase">Contraseña Segura</label>
+              <label for="contrasena" class="text-xs font-bold text-gray-700 uppercase">Contraseña Segura</label>
               <div class="relative">
-                <input 
+                <input
+                  id="contrasena" 
                   v-model="form.contrasena" 
                   :type="showPassword ? 'text' : 'password'" 
                   required 

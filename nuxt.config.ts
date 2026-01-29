@@ -40,6 +40,7 @@ export default defineNuxtConfig({
     name: 'Proyecto Curso',
     description: 'Sistema de gestión de historias clínicas y citas médicas.',
     defaultLocale: 'es',
+    indexable: true,
   },
 
   app: {
