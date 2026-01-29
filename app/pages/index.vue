@@ -31,22 +31,37 @@
   isSubmitting.value = true;
 
   try {
-    // PASO 1: Validar correo y contraseña
+    // PASO 1: Validar credenciales y consultar si requiere 2FA
+    // Usamos $fetch normal para esta comprobación previa
     const response = await $fetch(`${config.public.apiBase}/autenticacionRoutes/login`, {
       method: 'POST',
-      body: { correo: formData.value.correo, contrasena: formData.value.contrasena }
+      body: { 
+        correo: formData.value.correo, 
+        contrasena: formData.value.contrasena 
+      }
     });
 
-    // PASO 2: ¿Requiere 2FA?
+    //PASO 2: ¿Requiere 2FA?
     if (response.require2FA) {
       step.value = 'otp';
       isSubmitting.value = false;
-      addToast({ title: 'Segundo Factor', description: 'Introduce el código de tu App', type: 'info' });
+      addToast({ 
+        title: 'Segundo Factor', 
+        description: 'Introduce el código de tu App', 
+        type: 'info' 
+      });
       return;
     }
 
-    // PASO 3: Si no requiere 2FA, entrar directamente con NuxtAuth
-    await signIn({ correo: formData.value.correo, contrasena: formData.value.contrasena }, { callbackUrl: '/home' });
+    // PASO 3: Si NO requiere 2FA, iniciamos sesión oficialmente
+    // IMPORTANTE: Para provider 'local', NO pongas 'credentials'
+    await signIn(
+      { 
+        correo: formData.value.correo, 
+        contrasena: formData.value.contrasena 
+      }, 
+      { callbackUrl: '/home' }
+    );
 
   } catch (err) {
     const msg = err.data?.message || 'Error al iniciar sesión';

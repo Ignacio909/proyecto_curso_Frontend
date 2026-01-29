@@ -31,3 +31,4 @@ logs
 !.env.example
 test-results/.last-run.json
 GUIA_E2E.md
+playwright-report/index.html
