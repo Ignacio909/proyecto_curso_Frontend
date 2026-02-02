@@ -4,8 +4,6 @@ definePageMeta({
   auth: true
 })
 
-
-// TODO: Cuando tengan autenticación, obtener el pacienteId del usuario autenticado
 const { data: currentUser, token } = useAuth()
 
 useSeoMeta({
@@ -16,8 +14,6 @@ useSeoMeta({
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 
-// Cargar citas del paciente
-// TODO: Usar el ID real del paciente cuando esté disponible en currentUser
 const pacienteId = computed(() => currentUser.value?.paciente?.id)
 const { data: allCitas, pending, error, refresh } = await useFetch(
   () => pacienteId.value ? `${apiBase}/citas/paciente/${pacienteId.value}` : null,
@@ -30,20 +26,12 @@ const { data: allCitas, pending, error, refresh } = await useFetch(
   }
 )
 
-
-
-// Filtro activo
 const activeFilter = ref('recientes')
-
 const { addToast } = useToast()
 
-// Filtrar citas del paciente actual
-const userCitas = computed(() => {
-  if (!allCitas.value) return []
-  return allCitas.value
-})
+const userCitas = computed(() => allCitas.value || [])
 
-// Aplicar filtros
+// Lógica de filtrado (mantenida según tu original)
 const filteredCitas = computed(() => {
   const today = new Date()
   const oneWeekFromNow = new Date(today)
@@ -51,67 +39,30 @@ const filteredCitas = computed(() => {
   
   switch (activeFilter.value) {
     case 'recientes':
-      // Citas en el rango de 1 semana o menos desde hoy
       return userCitas.value.filter(cita => {
         const citaDate = new Date(cita.fecha)
         return citaDate >= today && citaDate <= oneWeekFromNow
       })
-    
     case 'pendientes':
       return userCitas.value.filter(cita => cita.estado === 'pendiente')
-    
     case 'completadas':
       return userCitas.value.filter(cita => cita.estado === 'completada')
-    
     case 'canceladas':
       return userCitas.value.filter(cita => cita.estado === 'cancelada')
-    
     default:
       return userCitas.value
   }
 })
 
-// Agrupar citas por estado
-const groupedCitas = computed(() => {
-  const groups = {
-    recientes: [],
-    pendientes: [],
-    completadas: [],
-    canceladas: []
-  }
-  
-  const today = new Date()
-  const oneWeekFromNow = new Date(today)
-  oneWeekFromNow.setDate(today.getDate() + 7)
-  
-  filteredCitas.value.forEach(cita => {
-    const citaDate = new Date(cita.fecha)
-    
-    // Recientes
-    if (citaDate >= today && citaDate <= oneWeekFromNow) {
-      groups.recientes.push(cita)
-    }
-    
-    // Por estado
-    if (cita.estado === 'pendiente') {
-      groups.pendientes.push(cita)
-    } else if (cita.estado === 'completada') {
-      groups.completadas.push(cita)
-    } else if (cita.estado === 'cancelada') {
-      groups.canceladas.push(cita)
-    }
-  })
-  
-  return groups
-})
-
-// Formatear fecha
+// Formateadores
 const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return new Date(dateString).toLocaleDateString('es-ES', { 
+    day: '2-digit', 
+    month: 'long', 
+    year: 'numeric' 
+  })
 }
 
-// Formatear hora
 const formatTime = (timeString) => {
   const [hours, minutes] = timeString.split(':')
   const hour = parseInt(hours)
@@ -120,243 +71,149 @@ const formatTime = (timeString) => {
   return `${hour12}:${minutes} ${ampm}`
 }
 
-// Eliminar cita
+// Clases dinámicas para los estados
+const getStatusClasses = (estado) => {
+  switch (estado.toLowerCase()) {
+    // Usamos tonos 800 para el texto para asegurar contraste AA (4.5:1)
+    case 'pendiente': return 'bg-amber-100 text-amber-800 border-amber-200'
+    case 'completada': return 'bg-emerald-100 text-emerald-800 border-emerald-200'
+    case 'cancelada': return 'bg-red-100 text-red-800 border-red-200'
+    default: return 'bg-gray-100 text-gray-800 border-gray-200'
+  }
+}
+
 const handleDelete = async (citaId) => {
   if (!confirm('¿Está seguro que desea eliminar esta cita?')) return
-  
   try {
     await $fetch(`${apiBase}/citas/${citaId}`, {
       method: 'DELETE',
-      headers: {
-        Authorization: token.value || ''
-      }
+      headers: { Authorization: token.value || '' }
     })
-    
     await refresh()
     addToast('Cita eliminada exitosamente')
   } catch (err) {
-    console.error('Error al eliminar cita:', err)
     addToast('Error al eliminar la cita', 'error')
   }
 }
 
-// Reprogramar cita (redirigir a agendar)
-const handleReschedule = (cita) => {
-  // TODO: Podrías pasar los datos de la cita actual para pre-llenar el formulario
-  navigateTo('/citas/add')
-}
+const handleReschedule = (cita) => navigateTo('/citas/add')
 </script>
 
 <template>
-  <section class="mx-auto w-full max-w-7xl">
-    <!-- Header con Volver y botón Agendar -->
-    <div class="mb-6 flex items-center justify-between">
-      <Button 
-        label="Volver" 
-        variant="green-2"
-        to="/home"
-        size="sm"
-      />
-      
-      <Button 
-        label="Agendar Cita +" 
-        variant="green-1"
-        to="/citas/add"
-        size="md"
-      />
-    </div>
+  <section class="mx-auto w-full max-w-6xl px-4 py-8">
+    <header class="mb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Mi Historial Médico</h1>
+        <p class="text-gray-600">Gestiona tus próximas consultas y revisa tu actividad.</p>
+      </div>
+      <div class="flex gap-3">
+        <Button label="Volver" variant="green-1" to="/home" size="sm" />
+        <Button label="Nueva Cita +" variant="green-1" to="/citas/add" size="md" />
+      </div>
+    </header>
 
-    <!-- Filtros -->
-    <div class="mb-6 flex flex-wrap gap-4 justify-center">
+    <nav class="mb-10 flex flex-wrap gap-2 p-1 bg-gray-100 rounded-xl w-fit mx-auto" aria-label="Filtros de citas">
       <button
-        @click="activeFilter = 'recientes'"
+        v-for="filter in ['recientes', 'pendientes', 'completadas', 'canceladas']"
+        :key="filter"
+        @click="activeFilter = filter"
+        :aria-current="activeFilter === filter ? 'page' : undefined"
         :class="[
-          'px-6 py-3 rounded-lg font-semibold transition-all shadow-md',
-          activeFilter === 'recientes' 
-            ? 'bg-green-1 text-white' 
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          'px-5 py-2 rounded-lg font-medium capitalize transition-all duration-200',
+          activeFilter === filter 
+            ? 'bg-white text-primary shadow-sm ring-1 ring-black/5' 
+            : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
         ]"
       >
-        Recientes
+        {{ filter }}
       </button>
-      
-      <button
-        @click="activeFilter = 'pendientes'"
-        :class="[
-          'px-6 py-3 rounded-lg font-semibold transition-all shadow-md',
-          activeFilter === 'pendientes' 
-            ? 'bg-green-1 text-white' 
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-        ]"
-      >
-        Pendientes
-      </button>
-      
-      <button
-        @click="activeFilter = 'completadas'"
-        :class="[
-          'px-6 py-3 rounded-lg font-semibold transition-all shadow-md',
-          activeFilter === 'completadas' 
-            ? 'bg-green-1 text-white' 
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-        ]"
-      >
-        Completadas
-      </button>
-      
-      <button
-        @click="activeFilter = 'canceladas'"
-        :class="[
-          'px-6 py-3 rounded-lg font-semibold transition-all shadow-md',
-          activeFilter === 'canceladas' 
-            ? 'bg-green-1 text-white' 
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-        ]"
-      >
-        Canceladas
-      </button>
+    </nav>
+
+    <div v-if="pending" class="flex flex-col items-center justify-center py-20" aria-live="polite">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+      <p class="text-gray-700 font-medium">Buscando tus citas...</p>
     </div>
 
-
-
-    <!-- Loading -->
-    <div v-if="pending" class="text-center py-12">
-      <p class="text-xl text-gray-600">Cargando citas...</p>
+    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-800 p-6 rounded-2xl text-center" role="alert">
+      <p class="font-bold">Hubo un problema al cargar la información.</p>
+      <p class="text-sm opacity-90">{{ error.message }}</p>
     </div>
 
-    <!-- Error -->
-    <div v-else-if="error" class="text-center py-12">
-      <p class="text-xl text-red-600">Error al cargar citas: {{ error.message }}</p>
-    </div>
-
-    <!-- Contenido de citas -->
     <div v-else>
-      <!-- Mostrar sección según filtro activo -->
-      <div v-if="activeFilter === 'recientes' && groupedCitas.recientes.length > 0">
-        <h2 class="text-2xl font-bold mb-4 text-primary">Recientes</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div 
-            v-for="cita in groupedCitas.recientes" 
-            :key="cita.id"
-            class="bg-primary text-white rounded-lg overflow-hidden shadow-lg"
-          >
-            <div class="bg-primary/90 px-4 py-3 border-b-2 border-black">
-              <h3 class="text-xl font-bold">{{ cita.especialista?.especialidad || 'N/A' }}</h3>
+      <h2 class="sr-only">Listado de citas filtradas</h2>
+      
+      <div v-if="filteredCitas.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <article 
+          v-for="cita in filteredCitas" 
+          :key="cita.id"
+          class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+        >
+          <div class="h-2 w-full bg-primary/20 group-hover:bg-primary transition-colors"></div>
+          
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+              <span 
+                :class="[
+                  'text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border',
+                  getStatusClasses(cita.estado)
+                ]"
+              >
+                {{ cita.estado }}
+              </span>
+              <h3 class="text-primary font-bold text-lg leading-tight">
+                {{ cita.especialista?.especialidad || 'General' }}
+              </h3>
             </div>
-            <div class="p-4 space-y-2">
-              <p class="text-lg"><strong>Fecha:</strong> {{ formatDate(cita.fecha) }}</p>
-              <p class="text-lg"><strong>Hora:</strong> {{ formatTime(cita.hora) }}</p>
-              <p class="text-lg"><strong>Especialista:</strong> {{ cita.especialista?.persona?.usuario || 'N/A' }}</p>
-              <p class="text-lg"><strong>Estado:</strong> {{ cita.estado }}</p>
-              <div class="flex gap-3 mt-4">
-                <button
-                  @click="handleDelete(cita.id)"
-                  class="flex-1 bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition"
-                >
-                  Eliminar
-                </button>
-                <button
-                  @click="handleReschedule(cita)"
-                  class="flex-1 bg-green-600 hover:bg-green-700 px-4 py-2 rounded transition"
-                >
-                  Reprogramar
-                </button>
+
+            <div class="space-y-4">
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-gray-50 rounded-lg text-primary" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-600 font-bold uppercase">Fecha y Hora</p>
+                  <p class="text-sm font-semibold text-gray-800">{{ formatDate(cita.fecha) }} • {{ formatTime(cita.hora) }}</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-gray-50 rounded-lg text-primary" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-600 font-bold uppercase">Especialista</p>
+                  <p class="text-sm font-semibold text-gray-800">{{ cita.especialista?.persona?.usuario || 'Por asignar' }}</p>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Pendientes -->
-      <div v-if="activeFilter === 'pendientes' && groupedCitas.pendientes.length > 0">
-        <h2 class="text-2xl font-bold mb-4 text-primary">Pendientes</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div 
-            v-for="cita in groupedCitas.pendientes" 
-            :key="cita.id"
-            class="bg-primary text-white rounded-lg overflow-hidden shadow-lg"
-          >
-            <div class="bg-primary/90 px-4 py-3 border-b-2 border-black">
-              <h3 class="text-xl font-bold">{{ cita.especialista?.especialidad || 'N/A' }}</h3>
-            </div>
-            <div class="p-4 space-y-2">
-              <p class="text-lg"><strong>Fecha:</strong> {{ formatDate(cita.fecha) }}</p>
-              <p class="text-lg"><strong>Hora:</strong> {{ formatTime(cita.hora) }}</p>
-              <p class="text-lg"><strong>Especialista:</strong> {{ cita.especialista?.persona?.usuario || 'N/A' }}</p>
-              <p class="text-lg"><strong>Estado:</strong> {{ cita.estado }}</p>
-              <div class="flex gap-3 mt-4">
-                <button
-                  @click="handleDelete(cita.id)"
-                  class="flex-1 bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition"
-                >
-                  Eliminar
-                </button>
-                <button
-                  @click="handleReschedule(cita)"
-                  class="flex-1 bg-green-600 hover:bg-green-700 px-4 py-2 rounded transition"
-                >
-                  Reprogramar
-                </button>
-              </div>
+            <div v-if="cita.estado === 'pendiente'" class="flex gap-2 mt-6 pt-6 border-t border-gray-100">
+              <button
+                @click="handleDelete(cita.id)"
+                class="flex-1 text-xs font-bold text-red-700 hover:bg-red-50 py-2 rounded-lg transition"
+                :aria-label="'Cancelar cita de ' + cita.especialista?.especialidad"
+              >
+                Cancelar
+              </button>
+              <button
+                @click="handleReschedule(cita)"
+                class="flex-1 text-xs font-bold text-green-1 bg-green-2/20 hover:bg-green-2/40 py-2 rounded-lg transition"
+              >
+                Reprogramar
+              </button>
             </div>
           </div>
-        </div>
+        </article>
       </div>
 
-      <!-- Completadas -->
-      <div v-if="activeFilter === 'completadas' && groupedCitas.completadas.length > 0">
-        <h2 class="text-2xl font-bold mb-4 text-primary">Completadas</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div 
-            v-for="cita in groupedCitas.completadas" 
-            :key="cita.id"
-            class="bg-primary text-white rounded-lg overflow-hidden shadow-lg"
-          >
-            <div class="bg-primary/90 px-4 py-3 border-b-2 border-black">
-              <h3 class="text-xl font-bold">{{ cita.especialista?.especialidad || 'N/A' }}</h3>
-            </div>
-            <div class="p-4 space-y-2">
-              <p class="text-lg"><strong>Fecha:</strong> {{ formatDate(cita.fecha) }}</p>
-              <p class="text-lg"><strong>Hora:</strong> {{ formatTime(cita.hora) }}</p>
-              <p class="text-lg"><strong>Especialista:</strong> {{ cita.especialista?.persona?.usuario || 'N/A' }}</p>
-              <p class="text-lg"><strong>Estado:</strong> {{ cita.estado }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Canceladas -->
-      <div v-if="activeFilter === 'canceladas' && groupedCitas.canceladas.length > 0">
-        <h2 class="text-2xl font-bold mb-4 text-primary">Canceladas</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div 
-            v-for="cita in groupedCitas.canceladas" 
-            :key="cita.id"
-            class="bg-primary text-white rounded-lg overflow-hidden shadow-lg"
-          >
-            <div class="bg-primary/90 px-4 py-3 border-b-2 border-black">
-              <h3 class="text-xl font-bold">{{ cita.especialista?.especialidad || 'N/A' }}</h3>
-            </div>
-            <div class="p-4 space-y-2">
-              <p class="text-lg"><strong>Fecha:</strong> {{ formatDate(cita.fecha) }}</p>
-              <p class="text-lg"><strong>Hora:</strong> {{ formatTime(cita.hora) }}</p>
-              <p class="text-lg"><strong>Especialista:</strong> {{ cita.especialista?.persona?.usuario || 'N/A' }}</p>
-              <p class="text-lg"><strong>Estado:</strong> {{ cita.estado }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sin citas -->
-      <div v-if="filteredCitas.length === 0" class="text-center py-12">
-        <p class="text-xl text-gray-600">No hay citas {{ activeFilter }} en este momento</p>
-        <Button 
-          label="Agendar Primera Cita" 
-          variant="green-1"
-          to="/citas/add"
-          size="lg"
-          class="mt-6"
-        />
+      <div v-else class="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+        <div class="text-6xl mb-4" aria-hidden="true">📅</div>
+        <h2 class="text-xl font-bold text-gray-800">No hay citas en "{{ activeFilter }}"</h2>
+        <p class="text-gray-600 mb-8 px-4">Parece que no tienes actividad programada en esta categoría por ahora.</p>
       </div>
     </div>
   </section>

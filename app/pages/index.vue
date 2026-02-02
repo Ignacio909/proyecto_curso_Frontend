@@ -158,6 +158,12 @@ const handleVerifyOTP = async () => {
           <span class="text-xl">→</span>
         </template>
       </button>
+      <p class="text-sm text-gray-600 font-medium text-center">
+            ¿Aún no tienes una cuenta? 
+            <NuxtLink to="/pacientes/add" class="text-primary font-extrabold hover:text-black transition-colors ml-1">
+              Regístrate aquí
+            </NuxtLink>
+      </p>
     </form>
 
     <form v-else @submit.prevent="handleVerifyOTP" class="p-8 space-y-6 animate-in slide-in-from-right duration-500">
@@ -195,14 +201,6 @@ const handleVerifyOTP = async () => {
   </div>
 
   
-        <div class="p-6 bg-gray-50 border-t border-gray-100 text-center">
-          <p class="text-sm text-gray-600 font-medium">
-            ¿Aún no tienes una cuenta? 
-            <NuxtLink to="/pacientes/add" class="text-primary font-extrabold hover:text-black transition-colors ml-1">
-              Regístrate aquí
-            </NuxtLink>
-          </p>
-        </div>
       </div>
     </div>
   </template>

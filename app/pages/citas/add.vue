@@ -109,6 +109,9 @@ const loadAvailableHours = async (fecha, especialistaId) => {
   }
 }
 
+// Estilos base para inputs y selects (Reemplaza al CSS con @apply)
+const baseInputClass = "w-full rounded-xl border-2 border-gray-200 bg-white py-3.5 pr-10 pl-12 text-gray-700 text-base transition-all duration-200 ease-in-out font-medium focus:border-primary focus:ring-4 focus:ring-primary/10 focus:outline-none hover:border-gray-300 placeholder:text-gray-400"
+
 const handleSubmit = async () => {
   try {
     // Validaciones
@@ -159,99 +162,155 @@ const handleSubmit = async () => {
     addToast('Error al agendar la cita: ' + (err.message || 'Desconocido'), 'error')
   }
 }
+
+
 </script>
 
 <template>
-  <section class="mx-auto w-full max-w-3xl">
-    <!-- Botón Volver -->
-    <div class="mb-6">
+  <section class="mx-auto w-full max-w-4xl px-4 py-8">
+    <header class="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Reservar Nueva Cita</h1>
+        <p class="text-gray-600 mt-2 font-medium">Completa los pasos para agendar tu consulta médica.</p>
+      </div>
       <Button 
-        label="Volver" 
-        variant="green-2"
-        to="/home"
+        label="Volver al historial" 
+        variant="green-1"
+        to="/citas/mis-citas"
         size="sm"
+        class="self-start md:self-auto"
       />
-    </div>
+    </header>
 
-    <!-- Título -->
-    <div class="bg-primary text-white rounded-t-lg p-6 text-center">
-      <h1 class="text-3xl font-bold">Agendar Cita</h1>
-    </div>
+    <main class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 transition-all duration-300">
+      <div class="p-8 md:p-12">
+        <form @submit.prevent="handleSubmit" class="space-y-8">
+          
+          <div class="space-y-3">
+            <label for="especialista-select" class="block text-sm font-bold text-gray-800 ml-1">
+              1. ¿Con quién deseas atenderte?
+            </label>
+            <div class="relative group">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-primary" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <select
+                id="especialista-select"
+                v-model="formData.especialistaId"
+                required
+                :class="[baseInputClass, 'custom-select-arrow']"
+              >
+                <option value="" disabled selected>Selecciona un especialista de la lista</option>
+                <option 
+                  v-for="specialist in specialists" 
+                  :key="specialist.id"
+                  :value="specialist.id"
+                >
+                  {{ specialist.especialidad }} — Dr(a). {{ specialist.persona?.usuario }}
+                </option>
+              </select>
+            </div>
+          </div>
 
+          <div class="space-y-3">
+            <label for="fecha-input" class="block text-sm font-bold text-gray-800 ml-1">
+              2. Elige la fecha
+            </label>
+            <div class="relative group">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-primary" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <input
+                id="fecha-input"
+                v-model="formData.fecha"
+                type="date"
+                :min="minDate"
+                :max="maxDate"
+                required
+                :class="baseInputClass"
+                aria-describedby="fecha-helper"
+              />
+            </div>
+            <p id="fecha-helper" class="text-xs font-semibold text-blue-700 mt-2 ml-1 flex items-center gap-1">
+              <span class="text-lg" aria-hidden="true">ⓘ</span> Atención disponible de Lunes a Viernes
+            </p>
+          </div>
 
+          <div class="space-y-3">
+            <label for="hora-select" class="block text-sm font-bold text-gray-800 ml-1">
+              3. Elige el horario
+            </label>
+            <div class="relative group">
+               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-primary" :class="{'opacity-50': !formData.fecha || !formData.especialistaId || loadingHours}" aria-hidden="true">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+              </div>
+              <select
+                id="hora-select"
+                v-model="formData.hora"
+                required
+                :disabled="!formData.fecha || !formData.especialistaId || loadingHours"
+                :class="[baseInputClass, 'custom-select-arrow disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed']"
+              >
+                <option value="" disabled selected>
+                  {{ loadingHours ? 'Verificando disponibilidad...' : 'Selecciona una hora disponible' }}
+                </option>
+                <option 
+                  v-for="hour in availableHours" 
+                  :key="hour.value"
+                  :value="hour.value"
+                >
+                  {{ hour.label }}
+                </option>
+              </select>
+            </div>
+            
+            <div aria-live="polite">
+              <p v-if="availableHours.length === 0 && formData.fecha && formData.especialistaId && !loadingHours" class="text-sm font-bold text-red-700 mt-2 ml-1">
+                 ✕ Lo sentimos, no hay horarios disponibles para esta fecha.
+              </p>
+              <p v-else-if="availableHours.length > 0 && !formData.hora" class="text-sm font-bold text-emerald-700 mt-2 ml-1">
+                 ✓ ¡Hay {{ availableHours.length }} horarios disponibles!
+              </p>
+            </div>
+          </div>
 
-    <!-- Formulario -->
-    <div class="bg-white rounded-b-lg border-2 border-primary p-8 shadow-lg">
-      <form @submit.prevent="handleSubmit" class="space-y-6">
-        
-        <!-- Seleccionar Especialista -->
-        <div>
-          <label class="block text-xl font-semibold mb-3">Seleccionar un Especialista:</label>
-          <select
-            v-model="formData.especialistaId"
-            required
-            class="w-full rounded-md border-2 border-gray-300 bg-gray-100 px-4 py-3 text-lg focus:outline-none focus:border-primary"
-          >
-            <option value="" disabled>Seleccione un especialista</option>
-            <option 
-              v-for="specialist in specialists" 
-              :key="specialist.id"
-              :value="specialist.id"
-            >
-              {{ specialist.especialidad }} - {{ specialist.persona?.usuario }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Seleccionar Fecha -->
-        <div>
-          <label class="block text-xl font-semibold mb-3">Elegir Fecha:</label>
-          <input
-            v-model="formData.fecha"
-            type="date"
-            :min="minDate"
-            :max="maxDate"
-            required
-            class="w-full rounded-md border-2 border-gray-300 px-4 py-3 text-lg focus:outline-none focus:border-primary"
-          />
-          <p class="text-sm text-gray-600 mt-2">* Solo se permiten citas de lunes a viernes</p>
-        </div>
-
-        <!-- Seleccionar Hora -->
-        <div>
-          <label class="block text-xl font-semibold mb-3">Elegir Hora:</label>
-          <select
-            v-model="formData.hora"
-            required
-            :disabled="!formData.fecha || !formData.especialistaId || loadingHours"
-            class="w-full rounded-md border-2 border-gray-300 bg-gray-100 px-4 py-3 text-lg focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <option value="" disabled>
-              {{ loadingHours ? 'Cargando horarios...' : 'Seleccione una hora' }}
-            </option>
-            <option 
-              v-for="hour in availableHours" 
-              :key="hour.value"
-              :value="hour.value"
-            >
-              {{ hour.label }}
-            </option>
-          </select>
-          <p v-if="availableHours.length === 0 && formData.fecha && formData.especialistaId && !loadingHours" class="text-sm text-red-600 mt-2">
-            No hay horarios disponibles para esta fecha
-          </p>
-        </div>
-
-        <!-- Botón Agendar -->
-        <div class="flex justify-center pt-4">
-          <Button 
-            label="Agendar" 
-            variant="green-1"
-            size="lg"
-            type="submit"
-          />
-        </div>
-      </form>
-    </div>
+          <div class="pt-8">
+            <Button 
+              label="Confirmar Cita" 
+              variant="green-1"
+              size="lg"
+              type="submit"
+              class="w-full md:w-auto md:px-12 shadow-lg"
+            />
+            <p class="text-sm text-gray-600 mt-4">Al confirmar, tu cita quedará en estado "Pendiente".</p>
+          </div>
+        </form>
+      </div>
+    </main>
   </section>
 </template>
+
+<style scoped>
+/* Solo mantenemos la personalización de la flecha del select usando CSS estándar.
+   Al no usar @apply, no tendrás warnings ni líneas amarillas. */
+
+.custom-select-arrow {
+  appearance: none;
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.5em 1.5em;
+  /* Flecha Gris (SVG codificado) */
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3e%3c/svg%3e");
+}
+
+.custom-select-arrow:focus {
+  /* Flecha Azul (Primary) al hacer focus */
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%232d6a7f' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3e%3c/svg%3e");
+}
+</style>
