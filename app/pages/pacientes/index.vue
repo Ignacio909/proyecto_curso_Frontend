@@ -30,11 +30,6 @@ const selectedPatient = ref(null)
 // Configuración de columnas para la tabla
 const tableColumns = [
   { 
-    key: 'id', 
-    label: 'ID', 
-    format: (val) => val?.substring(0, 8) + '...'
-  },
-  { 
     key: 'persona.usuario', 
     label: 'Usuario' 
   },
@@ -49,11 +44,6 @@ const tableColumns = [
   { 
     key: 'carnetIdentidad', 
     label: 'Carnet de Identidad' 
-  },
-  { 
-    key: 'persona.imagen', 
-    label: 'Imagen',
-    type: 'image'
   }
 ]
 

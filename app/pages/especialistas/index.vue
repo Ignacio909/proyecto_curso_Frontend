@@ -30,11 +30,6 @@ const selectedSpecialist = ref(null)
 // Configuración de columnas para la tabla
 const tableColumns = [
   { 
-    key: 'id', 
-    label: 'ID', 
-    format: (val) => val?.substring(0, 8) + '...'
-  },
-  { 
     key: 'persona.usuario', 
     label: 'Usuario' 
   },
@@ -46,11 +41,6 @@ const tableColumns = [
     key: 'especialidad', 
     label: 'Especialidad' 
   },
-  { 
-    key: 'persona.imagen', 
-    label: 'Imagen',
-    type: 'image'
-  }
 ]
 
 // Configuración de campos para modal de agregar

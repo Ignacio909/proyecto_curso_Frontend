@@ -54,9 +54,17 @@ const filteredCitas = computed(() => {
   }
 })
 
-// Formateadores
+// CÓDIGO CORREGIDO (SOLUCIÓN)
 const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString('es-ES', { 
+  if (!dateString) return ''
+  // 1. Dividimos el string "2026-02-05" manualmente
+  const [year, month, day] = dateString.split('-').map(Number)
+  
+  // 2. Creamos la fecha usando el constructor local (año, mes-1, dia)
+  // Nota: En JS los meses van de 0 a 11, por eso restamos 1 al mes
+  const localDate = new Date(year, month - 1, day)
+  
+  return localDate.toLocaleDateString('es-ES', { 
     day: '2-digit', 
     month: 'long', 
     year: 'numeric' 

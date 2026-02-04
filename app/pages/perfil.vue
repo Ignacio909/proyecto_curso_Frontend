@@ -37,6 +37,14 @@ const formData = ref({
 const selectedImage = ref(null)
 const imagePreview = ref(null)
 const fileInputRef = ref(null)
+const showPassAnterior = ref(false)
+const showPassNueva = ref(false)
+
+// Función de validación (Basada en tu modelo Personas.js)
+const validatePassword = (pass) => {
+  const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{8,}$/
+  return regex.test(pass)
+}
 
 const displayImage = computed(() => {
   if (imagePreview.value) return imagePreview.value
@@ -146,7 +154,18 @@ const handleSave = async () => {
     uploadData.append('usuario', formData.value.usuario)
     uploadData.append('correo', formData.value.correo)
 
-    if (formData.value.contrasenaAnterior && formData.value.contrasenaNueva) {
+    // VALIDACIÓN DE CONTRASEÑA
+    if (formData.value.contrasenaNueva) {
+      if (!formData.value.contrasenaAnterior) {
+        addToast('Debes ingresar la contraseña actual para realizar cambios', 'warning')
+        return
+      }
+      
+      if (!validatePassword(formData.value.contrasenaNueva)) {
+        addToast('La nueva contraseña debe tener min. 8 caracteres, letras, números y un símbolo (@$!%*#&).', 'error')
+        return
+      }
+
       uploadData.append('contrasenaAnterior', formData.value.contrasenaAnterior)
       uploadData.append('contrasena', formData.value.contrasenaNueva)
     }
@@ -166,8 +185,7 @@ const handleSave = async () => {
     if (isPaciente.value) endpoint = `${apiBase}/pacientes/${userId}`
     else if (isEspecialista.value) endpoint = `${apiBase}/especialistas/${userId}`
     else {
-      addToast('Rol no soportado para edición completa', 'warning')
-      return
+      endpoint = `${apiBase}/personas/${userId}`
     }
 
     await $fetch(endpoint, {
@@ -346,32 +364,58 @@ const handleSave = async () => {
               </template>
             </div>
 
-            <div class="pt-6 mt-6 border-t border-gray-100">
-              <h4 class="text-lg font-semibold text-gray-800 mb-4">Cambiar Contraseña</h4>
+            <div class="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-100">
+              <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <span class="i-heroicons-lock-closed"></span>
+                Cambiar Contraseña
+              </h3>
+
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
-                  <label for="contrasenaAnterior"class="text-sm font-semibold text-gray-700">Contraseña Actual</label>
-                  <input 
-                    id="contrasenaAnterior"
-                    v-model="formData.contrasenaAnterior"
-                    type="password" 
-                    placeholder="••••••••"
-                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-                  />
+                  <label class="text-sm font-semibold text-gray-700">Contraseña Actual</label>
+                  <div class="relative">
+                    <input 
+                      v-model="formData.contrasenaAnterior" 
+                      :type="showPassAnterior ? 'text' : 'password'"
+                      class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary/20 outline-none transition pr-12"
+                      placeholder="••••••••"
+                    />
+                    <button 
+                      type="button" 
+                      @click="showPassAnterior = !showPassAnterior"
+                      class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition"
+                    >
+                      <span v-if="showPassAnterior">🙈</span>
+                      <span v-else>👁️</span>
+                    </button>
+                  </div>
                 </div>
+
                 <div class="space-y-2">
-                  <label for="contrasenaNueva" class="text-sm font-semibold text-gray-700">Nueva Contraseña</label>
-                  <input 
-                    id="contrasenaNueva"
-                    v-model="formData.contrasenaNueva"
-                    type="password" 
-                    placeholder="••••••••"
-                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-                  />
+                  <label class="text-sm font-semibold text-gray-700">Nueva Contraseña</label>
+                  <div class="relative">
+                    <input 
+                      v-model="formData.contrasenaNueva" 
+                      :type="showPassNueva ? 'text' : 'password'"
+                      class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary/20 outline-none transition pr-12"
+                      placeholder="Mínimo 8 caracteres"
+                    />
+                    <button 
+                      type="button" 
+                      @click="showPassNueva = !showPassNueva"
+                      class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition"
+                    >
+                      <span v-if="showPassNueva">🙈</span>
+                      <span v-else>👁️</span>
+                    </button>
+                  </div>
+                  <p class="text-[10px] text-gray-500 italic mt-1">
+                    Usa letras, números y símbolos (ej. @, $, !).
+                  </p>
                 </div>
               </div>
             </div>
-
+            
             <div class="flex justify-end pt-6">
               <Button 
                 label="Guardar Cambios" 

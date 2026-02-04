@@ -93,12 +93,12 @@ const loadAvailableHours = async (fecha, especialistaId) => {
       }
     })
     
-    // Filtrar citas reservadas para ese especialista y fecha
+    // Normalizamos las horas de la BD para comparar (quitar segundos si los tienen)
     const reservedHours = allCitas.value
-      ?.filter(cita => cita.fecha === fecha)
-      .map(cita => cita.hora) || []
+      ?.filter(cita => cita.fecha === fecha && cita.estado !== 'cancelada')
+      .map(cita => cita.hora.substring(0, 5)) || [] // Toma solo "HH:mm"
     
-    // Filtrar horas disponibles
+    // Ahora la comparación funcionará con tu array allHours
     availableHours.value = allHours.filter(hour => !reservedHours.includes(hour.value))
     
   } catch (err) {
