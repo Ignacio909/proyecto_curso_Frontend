@@ -2,6 +2,7 @@
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
+  
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
@@ -55,6 +56,10 @@ export default defineNuxtConfig({
 
   auth: {
     baseURL: `${process.env.NUXT_PUBLIC_API_BASE}/autenticacionRoutes`,
+    globalAppMiddleware: true,
+    pages: {
+      signIn: '/', // <--- CAMBIA ESTO por la ruta real de tu formulario de login
+    },
     provider: {
       type: 'local',
       endpoints: {
@@ -83,21 +88,20 @@ export default defineNuxtConfig({
         }
       },
 
-      globalAppMiddleware: true,
-
-      sessionDataType: {
-        dataType: {
-          id: 'string',
-          usuario: 'string',
-          correo: 'string',
-          rol: '"paciente" | "especialista" | "admin"',
-          imagen: 'string | null'
-        }
-      },
 
       session: {
         enableRefreshOnWindowFocus: true,
       }
-    }
+    },
+
+    sessionDataType: {
+        id: 'string',
+        usuario: 'string',
+        correo: 'string',
+        rol: '"paciente" | "especialista" | "admin"',
+        imagen: 'string | null'
+      
+    },
   },
+
 })

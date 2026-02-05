@@ -1,7 +1,6 @@
 <script setup>
 definePageMeta({
   layout: 'default',
-  auth: true
 })
 
 const { data: currentUser, token } = useAuth()

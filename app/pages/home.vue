@@ -1,6 +1,6 @@
 <script setup>
 definePageMeta({
-  auth: true
+  layout: 'default',
 })
 
 useSeoMeta({

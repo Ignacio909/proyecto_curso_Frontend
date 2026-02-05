@@ -165,7 +165,7 @@ const saveAdd = async (formData) => {
       <Button 
         label="Volver" 
         variant="green-2"
-        to="/admin"
+        to="/"
         size="sm"
       />
       

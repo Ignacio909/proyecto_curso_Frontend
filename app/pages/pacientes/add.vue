@@ -79,6 +79,11 @@
       pending.value = false
     }
   }
+
+  const handleNumberInput = (e, field, limit) => {
+  const value = e.target.value.replace(/\D/g, '') // Elimina todo lo que no sea número
+  form[field] = value.slice(0, limit) // Limita la cantidad de caracteres
+}
   </script>
   
   <template>
@@ -100,7 +105,7 @@
         
         <div class="bg-primary p-6 text-center">
           <h1 class="text-2xl font-extrabold text-white">Crea tu Cuenta</h1>
-          <p class="text-blue-50 text-sm">Registro exclusivo para residentes en Cuba</p>
+          <p class="text-blue-50 text-sm">Registro exclusivo para pacientes del CAIBH</p>
         </div>
   
         <form @submit.prevent="handleRegistro" class="p-8">
@@ -122,8 +127,9 @@
                   v-model="form.telefono" 
                   required 
                   type="tel" 
-                  maxlength="8"
+                  inputmode="numeric"
                   placeholder="5XXXXXXX"
+                  @input="handleNumberInput($event, 'telefono', 8)"
                   class="w-full pl-16 pr-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl outline-none focus:border-primary transition-all" 
                 />
               </div>
@@ -136,8 +142,9 @@
                 v-model="form.carnetIdentidad" 
                 required 
                 type="text" 
-                maxlength="11"
+                inputmode="numeric"
                 placeholder="Ej. 95010123456"
+                @input="handleNumberInput($event, 'carnetIdentidad', 11)"
                 class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl outline-none focus:border-primary transition-all" 
               />
             </div>
